@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智慧托育综合监管大屏</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="screen.css" />
+</head>
+<body>
+  <div class="screen">
+    <div class="screen-bg">
+      <div class="grid"></div>
+      <div class="data-streams">
+        <span class="data-hub"></span>
+        <span class="stream stream-1"></span>
+        <span class="stream stream-2"></span>
+        <span class="stream stream-3"></span>
+        <span class="stream stream-4"></span>
+        <span class="stream stream-5"></span>
+        <span class="stream stream-6"></span>
+        <span class="binary-river river-1" data-text="01001101 11001010 01110100 10101100 01011110 11100010"></span>
+        <span class="binary-river river-2" data-text="10100110 01010111 11010010 00101101 10110011 01001001"></span>
+        <span class="binary-river river-3" data-text="01101001 00110110 11100101 01011010 10010111 11001000"></span>
+        <span class="binary-river river-4" data-text="11010100 01101110 00111001 10101011 01010101 11100011"></span>
+        <span class="stream-node node-1"></span>
+        <span class="stream-node node-2"></span>
+        <span class="stream-node node-3"></span>
+        <span class="stream-node node-4"></span>
+        <span class="stream-node node-5"></span>
+        <span class="stream-node node-6"></span>
+      </div>
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <header class="screen-header">
+      <div class="header-side left">
+        <div class="weather-card">
+          <i class="fas fa-cloud-sun"></i>
+          <div>
+            <div class="label">天气 / 空气</div>
+            <div class="value">多云 28℃ · AQI 43</div>
+            <div class="weather-meta">
+              <span>东南风 2级</span>
+              <span>湿度 61%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="title-wrap">
+          <div class="title-decor left"></div>
+          <div class="title-block">
+            <h1>智慧托育综合监管大屏</h1>
+            <p>Smart Childcare Supervision Cockpit</p>
+            <div class="title-tags">
+              <span>16区联动</span>
+              <span>AI 风险识别</span>
+              <span>10秒级刷新</span>
+            </div>
+          </div>
+          <div class="title-decor right"></div>
+        </div>
+      </div>
+
+      <div class="header-side right">
+        <div class="time-card">
+          <div class="label">当前时间</div>
+          <div class="value" id="currentTime">--:--:--</div>
+          <div class="date" id="currentDate">----年--月--日 星期-</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="screen-main">
+      <section class="side left-side">
+        <div class="panel">
+          <div class="panel-title"><span>今日出入概览</span><em>Access</em></div>
+          <div class="entry-overview">
+            <div class="entry-current-slot" id="entryCurrentSlot">当前时段 15:00-18:00</div>
+            <div class="chart-box compact" id="entryBar"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>监管态势总览</span><em>Overview</em></div>
+          <div class="overview-grid">
+            <div class="stat-card">
+              <div class="stat-head"><div class="stat-label">备案机构</div><div class="stat-trend up">+6.8%</div></div>
+              <div class="stat-value" data-target="128">0</div>
+              <div class="stat-unit">家</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-head"><div class="stat-label">在园幼儿</div><div class="stat-trend up">+3.2%</div></div>
+              <div class="stat-value" data-target="6128">0</div>
+              <div class="stat-unit">人</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-head"><div class="stat-label">从业人员</div><div class="stat-trend up">+1.4%</div></div>
+              <div class="stat-value" data-target="986">0</div>
+              <div class="stat-unit">人</div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-head"><div class="stat-label">当前告警</div><div class="stat-trend down">需关注</div></div>
+              <div class="stat-value" data-target="17">0</div>
+              <div class="stat-unit">条</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-head"><div class="stat-label">在线摄像头</div><div class="stat-trend up">99.1%</div></div>
+              <div class="stat-value" data-target="432">0</div>
+              <div class="stat-unit">路</div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-head"><div class="stat-label">今日巡检</div><div class="stat-trend up">目标达成</div></div>
+              <div class="stat-value" data-target="63">0</div>
+              <div class="stat-unit">次</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>机构运行状态</span><em>Status</em></div>
+          <div class="chart-box" id="statusPie"></div>
+        </div>
+      </section>
+
+      <section class="center-stage">
+        <div class="center-top">
+          <div class="panel center-map-panel">
+            <div class="panel-title"><span>上海机构分布与监管热力</span><em>Map & Focus</em></div>
+            <div class="map-stage">
+              <div class="map-core">
+                <div class="map-sweep"></div>
+                <div class="map-glow"></div>
+                <div class="map-ring ring-1"></div>
+                <div class="map-ring ring-2"></div>
+                <div class="map-ring ring-3"></div>
+                <div class="map-focus-banner">
+                  <span class="map-focus-label">当前定位</span>
+                  <strong id="mapFocusDistrict">黄浦区</strong>
+                  <em id="mapFocusAgency">彩虹桥托儿所</em>
+                </div>
+                <div class="map-hud hud-top-left">
+                  <span>覆盖机构</span>
+                  <strong>128</strong>
+                </div>
+                <div class="map-hud hud-top-right">
+                  <span>在线监管</span>
+                  <strong>96.3%</strong>
+                </div>
+                <div class="map-hud hud-bottom-left">
+                  <span>重点关注</span>
+                  <strong>05</strong>
+                </div>
+                <div class="map-chart" id="shanghaiMap" aria-label="上海市机构分布地图"></div>
+              </div>
+
+              <aside class="focus-card">
+                <div class="focus-head">
+                  <div>
+                    <div class="focus-title">当前重点关注机构</div>
+                    <div class="focus-name" id="focusAgencyName">彩虹桥托儿所</div>
+                  </div>
+                  <span class="risk-tag risk-high" id="focusRiskLevel">高风险</span>
+                </div>
+                <div class="focus-media">
+                  <img src="agency-placeholder.svg" alt="重点机构占位图" />
+                </div>
+                <div class="focus-body">
+                  <div class="focus-row"><span>风险类型</span><strong id="focusRiskType">容量超限</strong></div>
+                  <div class="focus-row"><span>所属区域</span><strong id="focusArea">黄浦区</strong></div>
+                  <div class="focus-row"><span>当前在园</span><strong id="focusPeople">132 / 120</strong></div>
+                  <div class="focus-row"><span>监控在线率</span><strong id="focusCamera">82%</strong></div>
+                  <div class="focus-row"><span>最后更新</span><strong id="focusTime">13:08:21</strong></div>
+                </div>
+                <div class="focus-footer">
+                  <div class="progress-line">
+                    <span>综合安全指数</span>
+                    <div class="bar"><i id="focusScoreBar" style="width:58%"></i></div>
+                    <b id="focusScore">58</b>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+
+        <div class="center-bottom">
+          <div class="kpi-strip">
+            <div class="kpi-item"><div class="kpi-label">今日视频抽查</div><div class="kpi-value" id="kpiVideo">125</div></div>
+            <div class="kpi-item"><div class="kpi-label">今日预警处置</div><div class="kpi-value" id="kpiHandle">38</div></div>
+            <div class="kpi-item"><div class="kpi-label">整改完成率</div><div class="kpi-value" id="kpiRectify">86%</div></div>
+            <div class="kpi-item"><div class="kpi-label">设备在线率</div><div class="kpi-value" id="kpiOnline">96.3%</div></div>
+            <div class="kpi-item"><div class="kpi-label">综合安全指数</div><div class="kpi-value" id="kpiSafety">91.6</div></div>
+          </div>
+          <!-- <div class="bottom-charts">
+            <div class="panel"><div class="panel-title"><span>近7日预警趋势</span><em>Trend</em></div><div class="chart-box" id="warningTrend"></div></div>
+            <div class="panel"><div class="panel-title"><span>区域监管评分</span><em>Score</em></div><div class="chart-box" id="regionBar"></div></div>
+          </div> -->
+        </div>
+      </section>
+
+      <section class="side right-side">
+        <div class="panel">
+          <div class="panel-title"><span>环境与设备监测</span><em>Device</em></div>
+          <div class="device-grid">
+            <div class="device-card">
+              <div class="device-head"><i class="fa-solid fa-temperature-three-quarters"></i><div class="device-label">温湿度达标率</div></div>
+              <div class="device-value">94.8%</div>
+              <div class="device-meter"><span style="width:94.8%"></span></div>
+            </div>
+            <div class="device-card">
+              <div class="device-head"><i class="fa-solid fa-wind"></i><div class="device-label">空气优良率</div></div>
+              <div class="device-value">96.1%</div>
+              <div class="device-meter"><span style="width:96.1%"></span></div>
+            </div>
+            <div class="device-card">
+              <div class="device-head"><i class="fa-solid fa-door-open"></i><div class="device-label">门禁在线率</div></div>
+              <div class="device-value">98.3%</div>
+              <div class="device-meter"><span style="width:98.3%"></span></div>
+            </div>
+            <div class="device-card">
+              <div class="device-head"><i class="fa-solid fa-fire-flame-curved"></i><div class="device-label">烟感在线率</div></div>
+              <div class="device-value">99.2%</div>
+              <div class="device-meter"><span style="width:99.2%"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>风险类型分布</span><em>Warning</em></div>
+          <div class="risk-layout">
+            <div class="chart-box risk-chart" id="riskTypeBar"></div>
+            <div class="top-risk-list" id="topRiskList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>监管闭环成效</span><em>Closure</em></div>
+          <div class="closure-layout">
+            <div class="chart-box closure-chart" id="closurePie"></div>
+            <div class="closure-stats">
+              <div class="closure-item"><span>今日预警</span><strong id="closureTotal">42</strong></div>
+              <div class="closure-item"><span>已处置</span><strong id="closureDone">35</strong></div>
+              <div class="closure-item"><span>待处置</span><strong id="closurePending">7</strong></div>
+              <div class="closure-item success"><span>闭环率</span><strong id="closureRate">83.3%</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="screen-footer">
+      <div class="footer-item"><span class="dot online"></span><span>平台在线运行</span></div>
+      <div class="footer-item"><span class="dot"></span><span>数据刷新频率：10 秒</span></div>
+      <div class="footer-item"><span class="dot"></span><span>监管中心：市托育综合管理平台</span></div>
+    </footer>
+
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+  </div>
+  <script src="screen.js"></script>
+</body>
+</html>
