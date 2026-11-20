@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echarts - Grid Example</title>
+
+
+    <script src="../static/newLayui/echarts.min.js"></script>
+    <script src="../static/layui/layui.js"></script>
+    <link rel="stylesheet" href="../static/layui/css/layui.css">
+    <!-- 引入Echarts库 -->
+</head>
+
+<body>
+<!-- 创建一个用于放置图表的div -->
+<div id="chartContainer" style="width: 1200px; height: 300px;"></div>
+
+<script>
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('chartContainer'));
+
+    // 示例数据
+    var data1 = [120, 200, 150, 80, 70, 110, 130];
+    var data2 = [90, 180, 120, 60, 50, 90, 110];
+
+    // 配置项
+    var option = {
+        // 设置grid属性来调整图表位置和大小
+        grid: {
+            left: 0, // 图表距离容器左边框的距离，这里设置为10%
+            right: 0, // 图表距离容器右边框的距离，这里设置为10%
+            bottom: 0, // 图表距离容器下边框的距离，这里设置为10%
+            top: 0, // 图表距离容器上边框的距离，这里设置为10%
+            containLabel: true // 确保grid区域包含坐标轴标签
+        },
+        xAxis: {
+            type: 'category',
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                name: 'Data 1',
+                type: 'line',
+                data: data1
+            },
+            {
+                name: 'Data 2',
+                type: 'line',
+                data: data2
+            }
+        ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+</script>
+</body>
+
+</html>

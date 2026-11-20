@@ -1,0 +1,33 @@
+.energy-toolbar { padding: 8px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.energy-toolbar button, .energy-dialog button { cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 3px; padding: 5px 9px; }
+.energy-toolbar button:hover, .energy-dialog button:hover { color: #009688; border-color: #009688; }
+#dirty { color: #888; font-size: 12px; }
+#treeRoot .tree-children, .energy-overlay .tree-children { display: block; }
+#treeRoot .node-content, .energy-overlay .node-content { display: flex; align-items: center; gap: 7px; min-height: 26px; }
+#treeRoot .check, .energy-overlay .check { width: 16px; height: 16px; margin: 0; accent-color: #009688; flex: none; }
+#treeRoot .toggle, .energy-overlay .toggle { border: 0; background: none; color: #009688; width: 18px; padding: 0; font-weight: bold; }
+#treeRoot .node-title, .energy-overlay .node-title { white-space: nowrap; }
+#treeRoot .actions { display: flex; margin-left: 4px; }
+#treeRoot .action { border: 0; background: none; color: #009688; padding: 2px 5px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+#treeRoot .danger { color: #b74747; }
+#treeRoot .check-all { display: flex; gap: 8px; align-items: center; padding: 5px 0; color: #666; border-bottom: 1px dashed #eee; }
+#treeRoot .drag-handle { cursor: grab; color: #8b9c9a; font-weight: bold; user-select: none; }
+#treeRoot .dragging { opacity: .35; }
+#treeRoot .drop-before { border-top: 2px solid #009688; }
+#treeRoot .drop-after { border-bottom: 2px solid #009688; }
+.energy-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+.energy-overlay.visible { display: flex; }
+.energy-dialog { width: min(720px,100%); max-height: 90vh; display: flex; flex-direction: column; background: white; border-radius: 4px; }
+.energy-dialog-head { padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+.energy-dialog-head button { border: 0; font-size: 22px; }
+.energy-dialog-body { overflow: auto; padding: 16px 20px; }
+.energy-dialog-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 8px; }
+.energy-dialog-footer button.primary { color: white; background: #009688; border-color: #009688; }
+.energy-dialog .field { display: block; margin-bottom: 15px; }
+.energy-dialog .field span { display: block; margin-bottom: 6px; }
+.energy-dialog input[type=text], .energy-dialog input[type=password] { border: 1px solid #ddd; padding: 7px; width: 100%; box-sizing: border-box; }
+.energy-dialog .source-search { margin-bottom: 12px; }
+.energy-dialog .source-tree { height: min(52vh,500px); overflow: auto; border: 1px solid #eee; padding: 8px; }
+.energy-dialog .source-tree .node-title { font-weight: normal; }
+.energy-dialog .error { color: #c33; min-height: 18px; font-size: 12px; }
+.energy-toast { display: none; position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 15px; border-radius: 3px; z-index: 10000; }

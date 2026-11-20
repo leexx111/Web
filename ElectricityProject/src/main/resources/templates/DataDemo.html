@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="../static/layui/css/layui.css">
+</head>
+<body>
+<div id="app" class="layui-container" style="margin-top: 50px;">
+</div>
+
+<script>
+    // 初始化LayUI模块
+    layui.use(['layer', 'form'], function(){
+        const layer = layui.layer;
+        window.layer = layer; // 暴露全局
+    });
+</script>
+</body>
+</html>

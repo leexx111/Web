@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>电量分项计量</title>
+    <!-- 引入layui CSS -->
+    <link href="../../static/layui/css/layui.css" rel="stylesheet">
+    <style>
+        #title_dlfxjl {
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 10px;
+        }
+
+        #body_dlfxjl {
+            width: 100%;
+            height: 670px;
+        }
+
+        #uilt1_dlfxjl {
+            width: 100%;
+            min-height: 40px;
+            display: flex;
+            margin-top: 10px;
+            margin-left: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #uilt2_dlfxjl {
+            width: 96%;
+            height: 320px;
+            padding-left: 10px;
+            padding-top: 5px;
+            margin-top: 15px;
+            border: 1px solid #e6e6e6;
+            border-radius: 2px;
+        }
+
+        #uilt3_dlfxjl {
+            width: 96%;
+            height: 290px;
+            padding-left: 10px;
+            display: flex;
+            margin-top: 15px;
+        }
+
+        #uilt3_one {
+            width: 50%;
+            height: 100%;
+        }
+
+        #uilt3_two {
+            width: 50%;
+            height: 100%;
+        }
+
+        #title_uilt3_one,
+        #title_uilt3_two {
+            width: 97%;
+            height: 27px;
+            background-color: #009688;
+            color: white;
+            padding-top: 3px;
+            padding-left: 10px;
+        }
+
+        #body_uilt3_one,
+        #body_uilt3_two {
+            padding-left: 10px;
+            padding-top: 5px;
+            width: 97%;
+            height: 327px;
+        }
+
+        .xuanze {
+            width: 100px;
+        }
+
+        /* 树形表格样式优化 */
+        .total-row {
+            background-color: #e6f2ff !important;
+            color: #0066cc !important;
+            font-weight: bold;
+        }
+
+        /* 树形表格图标样式 */
+        .tree-icon {
+            cursor: pointer;
+            margin-right: 5px;
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* 日期选择器样式 */
+        .date-range-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .range-separator {
+            line-height: 38px;
+        }
+
+        /* 修复固定列边框问题 */
+        .layui-table-fixed-l .layui-table-body {
+            border-right: 1px solid #e6e6e6;
+        }
+
+        .layui-table-fixed-r .layui-table-body {
+            border-left: 1px solid #e6e6e6;
+        }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .error-message {
+            color: #ff5722;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f0f0;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body style="overflow: hidden;">
+    <div id="title_dlfxjl">电量分项计量</div>
+    <div id="body_dlfxjl">
+        <div id="uilt1_dlfxjl">
+            <label style="padding-top: 10px;margin-right: 10px;margin-left: 10px">配电室:</label>
+            <select id="pds" class="layui-select" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+                <option value="all">所有</option>
+                <option value="1">1#配电室</option>
+                <option value="2">2#配电室</option>
+                <option value="6">6#配电室</option>
+            </select>
+
+            <!-- 日期类型选择按钮 -->
+            <button id="btn-day" class="layui-btn layui-btn-primary" style="margin-left: 25px">日</button>
+            <button id="btn-month" class="layui-btn layui-btn-primary">月</button>
+            <button id="btn-year" class="layui-btn">年</button>
+            <button id="btn-custom" class="layui-btn layui-btn-primary">自定义</button>
+
+            <!-- 单日期输入框 -->
+            <input type="text" class="layui-input" placeholder="选择年份" id="single-date"
+                style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+
+            <!-- 自定义时间范围（默认隐藏） -->
+            <div id="date-range" class="date-range-container" style="display: none;">
+                <input type="text" class="layui-input" placeholder="开始日期" id="start-date"
+                    style="width: 180px;border: 2px solid rgba(24,24,24,0.98);">
+                <div class="range-separator">至</div>
+                <input type="text" class="layui-input" placeholder="结束日期" id="end-date"
+                    style="width: 180px;border: 2px solid rgba(24,24,24,0.98);">
+            </div>
+
+            <button class="layui-btn" style="margin-left: 10px;" id="query-btn">查询</button>
+        </div>
+        <div id="uilt2_dlfxjl">
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <table class="layui-hide" id="ID-treeTable-demo"></table>
+        </div>
+        <div id="uilt3_dlfxjl">
+            <div id="uilt3_one">
+                <div id="title_uilt3_one">
+                    用电分项——时段电量分布图
+                </div>
+                <div id="body_uilt3_one">
+                    <div id="chartContainer" style="width: 100%; height: 80%;"></div>
+                </div>
+            </div>
+            <div id="uilt3_two">
+                <div id="title_uilt3_two">
+                    用电分项——尖峰平谷分布图
+                </div>
+                <div id="body_uilt3_two">
+                    <div id="chartContainers" style="width: 100%; height: 80%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩层 -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="layui-anim layui-anim-rotate layui-anim-loop">
+            <i class="layui-icon" style="font-size: 30px; color: #1E9FFF;">&#xe63d;</i>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script>
+        layui.config({
+            base: '../../static/layui/'
+        }).use(['layer', 'table', 'laydate'], function () {
+            var $ = layui.jquery;
+            var table = layui.table;
+            var layer = layui.layer;
+            var laydate = layui.laydate;
+
+            // 当前选中的日期类型
+            var currentDateType = 'year';
+            // 图表实例
+            var myChart, myCharts;
+            // 表格实例
+            var tableInstance = null;
+
+            // 显示加载动画
+            function showLoading() {
+                $('#loadingOverlay').show();
+            }
+
+            // 隐藏加载动画
+            function hideLoading() {
+                $('#loadingOverlay').hide();
+            }
+
+            // 显示错误信息
+            function showError(message) {
+                $('#error-message').text(message || '数据加载失败，请重试').show();
+            }
+
+            // 隐藏错误信息
+            function hideError() {
+                $('#error-message').hide();
+            }
+
+            // 初始化日期选择器
+            var initDatePickers = function () {
+                // 年选择器
+                laydate.render({
+                    elem: '#single-date',
+                    type: 'year',
+                    theme: '#009688',
+                    value: new Date().getFullYear() + '-01-01'
+                });
+
+                // 开始日期选择器
+                laydate.render({
+                    elem: '#start-date',
+                    type: 'date',
+                    theme: '#009688',
+                    done: function (value) {
+                        laydate.render({
+                            elem: '#end-date',
+                            type: 'date',
+                            min: value,
+                            theme: '#009688'
+                        });
+                    }
+                });
+
+                // 结束日期选择器
+                laydate.render({
+                    elem: '#end-date',
+                    type: 'date',
+                    theme: '#009688'
+                });
+            };
+
+            // 切换日期类型
+            var switchDateType = function (type) {
+                currentDateType = type;
+
+                // 更新按钮样式
+                $('#btn-day, #btn-month, #btn-year, #btn-custom').addClass('layui-btn-primary');
+                $('#btn-' + type).removeClass('layui-btn-primary');
+
+                // 显示对应的日期输入框
+                if (type === 'custom') {
+                    $('#single-date').hide();
+                    $('#date-range').show();
+                } else {
+                    $('#date-range').hide();
+                    $('#single-date').show();
+
+                    // 根据类型调整日期格式和初始值
+                    var format, value;
+                    if (type === 'day') {
+                        format = 'yyyy-MM-dd';
+                        value = new Date();
+                    } else if (type === 'month') {
+                        format = 'yyyy-MM';
+                        value = new Date();
+                    } else if (type === 'year') {
+                        format = 'yyyy';
+                        value = new Date().getFullYear().toString();
+                    }
+
+                    // 重新初始化单日期选择器
+                    laydate.render({
+                        elem: '#single-date',
+                        type: type === 'day' ? 'date' : type,
+                        format: format,
+                        theme: '#009688',
+                        value: value
+                    });
+                }
+            };
+
+            // 处理表格列配置
+            var getTableColumns = function (type, dateRange) {
+                // 基础列
+                var baseCols = [
+                    {
+                        field: 'item_name',
+                        title: '分项名称',
+                        width: 200,
+                        fixed: 'left',
+                        templet: function (d) {
+                            // 判断当前项是否有子节点
+                            var hasChildren = d.hasChildren;
+                            var iconHtml = '';
+
+                            if (hasChildren) {
+                                iconHtml = '<i class="tree-icon layui-icon layui-icon-triangle-d"></i>';
+                            } else {
+                                iconHtml = '<i class="tree-icon"></i>';
+                            }
+
+                            if (d.isTotal) {
+                                return '<span style="font-weight: bold;">' + d.item_name + '</span>';
+                            }
+
+                            return iconHtml + d.item_name;
+                        }
+                    },
+                ];
+
+                // 根据日期类型添加不同的列
+                if (type === 'day') {
+                    for (let i = 0; i < 24; i++) {  // 从0开始到23
+                        baseCols.push({
+                            field: `hour_${i}`,
+                            title: `${i}时`,
+                            width: 80,
+                            align: 'right',
+                            templet: function (d) {
+                                const value = d[`hour_${i}`] || 0;
+                                return typeof value === 'number' ? value.toFixed(1) : value;
+                            }
+                        });
+                    }
+                } else if (type === 'month') {
+                    for (let i = 1; i <= 31; i++) {
+                        baseCols.push({
+                            field: `day_${i}`,
+                            title: i + '日',
+                            width: 80,
+                            align: 'right',
+                            templet: function (d) {
+                                const value = d[`day_${i}`] || 0;
+                                return typeof value === 'number' ? value.toFixed(1) : value;
+                            }
+                        });
+                    }
+                } else if (type === 'year') {
+                    for (let i = 1; i <= 12; i++) {
+                        baseCols.push({
+                            field: `month_${i}`,
+                            title: i + '月',
+                            width: 80,
+                            align: 'right',
+                            templet: function (d) {
+                                const value = d[`month_${i}`] || 0;
+                                return typeof value === 'number' ? value.toFixed(1) : value;
+                            }
+                        });
+                    }
+                } else if (type === 'custom') {
+                    // 自定义日期范围列
+                    if (dateRange && dateRange.length > 0) {
+                        dateRange.forEach(function (date) {
+                            baseCols.push({
+                                field: date,
+                                title: date.substring(5),
+                                width: 100,
+                                align: 'right',
+                                templet: function (d) {
+                                    const value = d[date] || 0;
+                                    return typeof value === 'number' ? value.toFixed(1) : value;
+                                }
+                            });
+                        });
+                    }
+                }
+
+                return baseCols;
+            };
+
+            // 渲染表格
+            var renderTable = function (data, type, dateRange) {
+                showLoading();
+
+                // 销毁旧表格实例（如果存在）
+                if (tableInstance && typeof tableInstance.destroy === 'function') {
+                    tableInstance.destroy();
+                }
+
+                // 使用layui表格渲染
+                tableInstance = table.render({
+                    elem: '#ID-treeTable-demo',
+                    data: data,
+                    page: false,
+                    height: 320,
+                    cols: [getTableColumns(type, dateRange)],
+                    done: function () {
+                        // 为总计行添加特殊样式
+                        $('.layui-table-body tr').each(function () {
+                            var index = $(this).index();
+                            var item = data[index];
+                            if (item && item.isTotal) {
+                                $(this).addClass('total-row');
+                                $(this).find('td').css({ 'font-weight': 'bold' });
+                            }
+                        });
+
+                        // 绑定树形图标点击事件
+                        $('.tree-icon').off('click').on('click', function (e) {
+                            e.stopPropagation();
+                            var $this = $(this);
+                            var tr = $this.closest('tr');
+                            var index = tr.index();
+                            var item = data[index];
+
+                            if ($this.hasClass('layui-icon-triangle-d')) {
+                                $this.removeClass('layui-icon-triangle-d').addClass('layui-icon-triangle-r');
+                                hideChildren(item.id, data);
+                            } else {
+                                $this.removeClass('layui-icon-triangle-r').addClass('layui-icon-triangle-d');
+                                showChildren(item.id, data);
+                            }
+                        });
+
+                        $('.layui-table-body tr').off('click').on('click', function () {
+                            var index = $(this).index();
+                            var item = data[index];
+                            if (item) {
+                                updateBarChart(data, type, dateRange, item);
+                            }
+                        });
+
+                        hideLoading();
+                    }
+                });
+            };
+
+            // 隐藏子节点
+            function hideChildren(parentId, tableData) {
+                var $table = $('.layui-table-body');
+                $table.find('tr').each(function () {
+                    var index = $(this).index();
+                    var item = tableData[index];
+                    if (item && item.pid === parentId) {
+                        $(this).hide();
+                        // 递归隐藏子节点的子节点
+                        hideChildren(item.id, tableData);
+                    }
+                });
+            }
+
+            // 显示子节点
+            function showChildren(parentId, tableData) {
+                var $table = $('.layui-table-body');
+                $table.find('tr').each(function () {
+                    var index = $(this).index();
+                    var item = tableData[index];
+                    if (item && item.pid === parentId) {
+                        $(this).show();
+                        // 如果该子节点本身是展开状态，则继续显示其子节点
+                        var $icon = $(this).find('.tree-icon');
+                        if ($icon.hasClass('layui-icon-triangle-d')) {
+                            showChildren(item.id, tableData);
+                        }
+                    }
+                });
+            }
+
+            // 更新柱状图 - 使用总计行数据
+            var updateBarChart = function(data, type, dateRange, selectedRow) {
+                let xAxisData = [];
+                let seriesData = [];
+
+                const chartRow = selectedRow || data.find(item => item.isTotal);
+                if (!chartRow) {
+                    console.error('未找到用于绘图的数据');
+                    return;
+                }
+                
+                if (type === 'year') {
+                    xAxisData = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    
+                    // 从当前行提取每月数据
+                    for (let i = 1; i <= 12; i++) {
+                        const value = parseFloat(chartRow[`month_${i}`]) || 0;
+                        seriesData.push(Math.round(value * 10) / 10);
+                    }
+                } else if (type === 'month') {
+                    // 生成日期标签
+                    for (let i = 1; i <= 31; i++) {
+                        xAxisData.push(i + '日');
+                    }
+                    
+                    // 从当前行提取每日数据
+                    for (let i = 1; i <= 31; i++) {
+                        const value = parseFloat(chartRow[`day_${i}`]) || 0;
+                        seriesData.push(Math.round(value * 10) / 10);
+                    }
+                } else if (type === 'day') {
+                    // 生成小时标签
+                    for (let i = 0; i < 24; i++) {
+                        xAxisData.push(i + '时');
+                    }
+                    
+                    // 从当前行提取每小时数据
+                    for (let i = 0; i < 24; i++) {
+                        const value = parseFloat(chartRow[`hour_${i}`]) || 0;
+                        seriesData.push(Math.round(value * 10) / 10);
+                    }
+                } else if (type === 'custom') {
+                    // 自定义日期范围处理
+                    xAxisData = dateRange.map(date => date.substring(5));
+                    
+                    dateRange.forEach(function(date) {
+                        const value = parseFloat(chartRow[date]) || 0;
+                        seriesData.push(Math.round(value * 10) / 10);
+                    });
+                }
+                
+                // 配置和渲染图表
+                var barOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: xAxisData
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value} kWh'
+                        }
+                    },
+                    series: [{
+                        name: chartRow.item_name || '电量',
+                        type: 'bar',
+                        data: seriesData,
+                        itemStyle: {
+                            color: '#009688'
+                        }
+                    }]
+                };
+                
+                // 初始化或更新图表
+                if (!myChart) {
+                    myChart = echarts.init(document.getElementById('chartContainer'));
+                }
+                myChart.setOption(barOption);
+            };
+
+            // 更新饼图（尖峰平谷）
+            var updatePieChart = function (data) {
+                // 查找总计行
+                var totalData = data.find(item => item.isTotal);
+                
+                if (!totalData) {
+                    console.warn('未找到总计数据');
+                    return;
+                }
+                console.log('总计数据:', totalData);
+
+                // 提取尖峰平谷数据
+                var pieData = [
+                    { value: totalData.jian || 0, name: '尖' },
+                    { value: totalData.feng || 0, name: '峰' },
+                    { value: totalData.ping || 0, name: '平' },
+                    { value: totalData.gu || 0, name: '谷' }
+                ];
+
+                var pieOption = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c} kWh ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data: ['尖', '峰', '平', '谷']
+                    },
+                    series: [
+                        {
+                            name: '尖峰平谷',
+                            type: 'pie',
+                            radius: '50%',
+                            data: pieData,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 5,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            itemStyle: {
+                                borderRadius: 5,
+                                borderColor: '#fff',
+                                borderWidth: 1
+                            },
+                            label: {
+                                formatter: '{b}: {c} kWh ({d}%)'
+                            }
+                        }
+                    ]
+                };
+
+                if (!myCharts) {
+                    myCharts = echarts.init(document.getElementById('chartContainers'));
+                }
+                myCharts.setOption(pieOption);
+            };
+
+            // 从真实API获取数据
+            function fetchDataFromAPI(params, callback) {
+                showLoading();
+                hideError();
+
+                // 根据日期类型确定API端点
+                var endpoint = '/fhsb/get' + params.type;
+
+                // 准备请求参数
+                var requestData = {
+                    pds: params.pds
+                };
+
+                // 根据日期类型添加日期参数
+                if (params.type === 'custom') {
+                    requestData.startDate = params.date1;
+                    requestData.endDate = params.date2;
+                } else {
+                    requestData.date = params.date;
+                }
+
+                console.log('请求参数:', requestData);
+
+                // 发送AJAX请求
+                $.ajax({
+                    url: endpoint,
+                    type: 'GET',
+                    data: requestData,
+                    dataType: 'json',
+                    timeout: 10000,
+                    success: function(response) {
+                        console.log('API响应:', response);
+                        
+                        // 处理API响应数据
+                        var data = response;
+                        
+                        // 确保数据是数组
+                        if (!Array.isArray(data)) {
+                            showError('API返回的数据格式不正确');
+                            hideLoading();
+                            return;
+                        }
+                        
+                        // 转换数据：将字符串数字转换为数值并格式化
+                        data = data.map(item => {
+                            var newItem = {...item};
+                            for (var key in newItem) {
+                                if (key.startsWith('hour_') || key.startsWith('day_') || key.startsWith('month_') || 
+                                    key === 'jian' || key === 'feng' || key === 'ping' || key === 'gu') {
+                                    // 转换为数字并保留1位小数
+                                    const numValue = parseFloat(newItem[key]) || 0;
+                                    newItem[key] = Math.round(numValue * 10) / 10; // 保留1位小数
+                                }
+                            }
+                            return newItem;
+                        });
+                        
+                        // 确保所有数据项都有hasChildren属性
+                        data.forEach(item => {
+                            if (item.hasChildren === undefined) {
+                                // 根据pid判断是否有子节点
+                                item.hasChildren = data.some(child => child.pid == item.id);
+                            }
+                        });
+                        
+                        console.log('处理后的数据:', data);
+                        
+                        // 如果是自定义日期范围，需要计算日期范围
+                        var dateRange = null;
+                        if (params.type === 'custom') {
+                            dateRange = calculateDateRange(params.date1, params.date2);
+                        }
+                        
+                        callback(data, dateRange);
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMsg = '请求失败: ';
+                        if (status === 'timeout') {
+                            errorMsg += '请求超时，请重试';
+                        } else {
+                            errorMsg += error || '未知错误';
+                        }
+                        showError(errorMsg);
+                        hideLoading();
+                    }
+                });
+            }
+
+            // 计算日期范围（用于自定义日期）
+            function calculateDateRange(startDateStr, endDateStr) {
+                var dateRange = [];
+                var startDate = new Date(startDateStr);
+                var endDate = new Date(endDateStr);
+
+                // 确保开始日期在结束日期之前
+                if (startDate > endDate) {
+                    var temp = startDate;
+                    startDate = endDate;
+                    endDate = temp;
+                }
+
+                // 生成日期范围数组
+                var currentDate = new Date(startDate);
+                while (currentDate <= endDate) {
+                    var dateStr = formatDate(currentDate);
+                    dateRange.push(dateStr);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                return dateRange;
+            }
+
+            // 日期格式化辅助函数
+            function formatDate(date) {
+                var year = date.getFullYear();
+                var month = date.getMonth() + 1;
+                var day = date.getDate();
+
+                month = month < 10 ? '0' + month : month;
+                day = day < 10 ? '0' + day : day;
+
+                return year + '-' + month + '-' + day;
+            }
+
+            // 查询按钮点击事件
+            $('#query-btn').click(function () {
+                var pdsValue = $('#pds').val();
+                var params = {
+                    pds: pdsValue,
+                    type: currentDateType
+                };
+
+                if (currentDateType === 'custom') {
+                    var startDate = $('#start-date').val();
+                    var endDate = $('#end-date').val();
+
+                    if (!startDate || !endDate) {
+                        layer.msg('请选择完整的日期范围', { icon: 2 });
+                        return;
+                    }
+                    params.date1 = startDate;
+                    params.date2 = endDate;
+                } else {
+                    var date = $('#single-date').val();
+                    if (!date) {
+                        layer.msg('请选择日期', { icon: 2 });
+                        return;
+                    }
+                    params.date = date;
+                }
+
+                // 从API获取数据
+                fetchDataFromAPI(params, function (data, dateRange) {
+                    renderTable(data, currentDateType, dateRange);
+                    updateBarChart(data, currentDateType, dateRange);
+                    updatePieChart(data);
+                });
+            });
+
+            // 绑定日期类型切换事件
+            $('#btn-day').click(function () { switchDateType('day'); });
+            $('#btn-month').click(function () { switchDateType('month'); });
+            $('#btn-year').click(function () { switchDateType('year'); });
+            $('#btn-custom').click(function () { switchDateType('custom'); });
+
+            // 初始化页面
+            initDatePickers();
+            switchDateType('day');
+
+
+            var date = $('#single-date').val();
+            // 初始加载数据
+            var initialParams = {
+                type: 'day',
+                pds: 'all',
+                date: date
+            };
+
+            fetchDataFromAPI(initialParams, function (data, dateRange) {
+                renderTable(data, 'day', dateRange);
+                updateBarChart(data, 'day', dateRange);
+                updatePieChart(data);
+            });
+
+            // 窗口大小变化时重绘图表
+            window.addEventListener('resize', function () {
+                if (myChart) myChart.resize();
+                if (myCharts) myCharts.resize();
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>

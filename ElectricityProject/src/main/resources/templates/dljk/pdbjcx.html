@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>配电报警查询</title>
+    <script src="../../static/cms/layui.js"></script>
+    <link rel="stylesheet" href="../../static/cms/css/layui.css">
+    <style>
+        #title_pdbjcx{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        #body_pdbjcx{
+            width: 100%;
+            height: 90vh;
+        }
+        #uilt1_pdbjcx{
+            width: 100%;
+            height: 50px;
+            display: flex;
+            margin-top: 10px;
+        }
+        select,input{
+            border: 1px solid #b2b2b2;
+            color: #757575;
+        }
+        #uilt2_pdbjcx{
+            width: 90%;
+            height: 620px;
+            padding-left: 15px;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        .status-pending {
+            background-color: #fff3e0;
+            color: #faad14;
+        }
+        .status-resolved {
+            background-color: #e6f7ed;
+            color: #52c41a;
+        }
+        .status-alarm {
+            background-color: #ffe6e6;
+            color: #ff4d4f;
+        }
+    </style>
+</head>
+<body>
+<div id="title_pdbjcx">&nbsp;&nbsp;&nbsp;配电报警查询</div>
+<div id="body_pdbjcx">
+    <div id="uilt1_pdbjcx">
+        <label class="layui-form-label">报警类型</label>
+        <select  style="width: 150px;font-size: 16px;height: 20px;margin-top: 10px;">
+            <option value="全部">全部</option>
+            <option value="电压报警">电压报警</option>
+            <option value="跳闸报警">跳闸报警</option>
+            <option value="高温报警">高温报警</option>
+        </select>
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 20px">级别:</label>
+        <select  style="width: 150px;font-size: 16px;height: 20px;margin-top: 10px;">
+            <option value="全部">全部</option>
+            <option value="1">1级</option>
+            <option value="2">2级</option>
+            <option value="3">3级</option>
+        </select>
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 60px">状态:</label>
+        <select style="width: 100px;font-size: 16px;height: 20px;margin-top: 10px;">
+            <option value="全部">全部</option>
+            <option value="0">未确认</option>
+            <option value="1">已确认</option>
+            <option value="2">已恢复</option>
+        </select>
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 10px">设备:</label>
+        <input  style="width: 150px;font-size: 16px;height: 20px;margin-top: 10px;" value="全部"/>
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 10px">查询日期:</label>
+        <input type="text" id="startDate" placeholder="开始日期" class="layui-input" style="width: 120px;">
+        <span style="margin: 0 5px;">-</span>
+        <input type="text" id="endDate" placeholder="结束日期" class="layui-input" style="width: 120px;">
+
+        <button class="layui-btn" id="queryBtn">查询</button>
+        <button class="layui-btn layui-btn-normal" id="exportBtn" style="margin-left: 10px;">导出数据</button>
+    </div>
+    <div id="uilt2_pdbjcx">
+        <table class="layui-table">
+            <thead>
+            <tr>
+                <th style="background-color: #009688; color: white;width: 30px">编号</th>
+                <th style="background-color: #009688; color: white;">配电室名称</th>
+                <th style="background-color: #009688; color: white;width: 500px">告警内容</th>
+                <th style="background-color: #009688; color: white;">级别</th>
+                <th style="background-color: #009688; color: white;">告警时间</th>
+                <th style="background-color: #009688; color: white;">结束时间</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <!-- 分页容器 -->
+        <div id="pageContainer" style="text-align: center; margin-top: 20px;"></div>
+    </div>
+</div>
+
+<script>
+    $ = layui.jquery;
+    // 全局变量：存储所有查询到的报警数据
+    var totalAlarmData = [];
+    function displayAlarmEndTime(item) {
+        const status = String(item.alarm_status);
+        if (status === '0' || status === '1') return '未恢复';
+        return status === '2' ? (item.update_time || '-') : '-';
+    }
+    function displayAlarmRoom(item) {
+        const name = item.alarm_name || '';
+        const content = item.alarm_content || '';
+        if (!name || !content.startsWith(name + '-')) return name || '-';
+        if (name.startsWith('2-')) return '2号配电室';
+        if (name.startsWith('6-')) return '6号配电室';
+        return '1号配电室';
+    }
+    layui.use(['form', 'laydate', 'laypage'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var laypage = layui.laypage;
+        var layer = layui.layer; // 引入layer（用于提示信息）
+
+        // 渲染日期选择器
+        laydate.render({
+            elem: '#startDate',
+            type: 'date',
+            value: "2024-06-26"
+        });
+
+        laydate.render({
+            elem: '#endDate',
+            type: 'date',
+            value: getTodayDate()
+        });
+
+        // 获取昨天日期
+        function getYesterdayDate() {
+            var date = new Date();
+            date.setDate(date.getDate() - 1);
+            return formatDate(date);
+        }
+
+        // 获取今天日期
+        function getTodayDate() {
+            var date = new Date();
+            date.setDate(date.getDate() + 1);
+            return formatDate(date);
+        }
+
+        // 日期格式化
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        // 查询按钮点击事件
+        $('#queryBtn').on('click', function() {
+            // 获取查询条件
+            const alarmLevel1 = $("select:eq(0)").val();
+            const alarmLevel2 = $("select:eq(1)").val();
+            const status = $("select:eq(2)").val();
+            const device = $("input:eq(0)").val();
+            const startDate = $("#startDate").val();
+            const endDate = $("#endDate").val();
+
+            // 准备请求参数
+            const params = {
+                alarmLevel1,
+                alarmLevel2,
+                status,
+                device,
+                startDate,
+                endDate
+            };
+            // 发送AJAX请求
+            $.ajax({
+                url: "http://192.168.1.227:8081/hdb/getALLalarm", // 后端接口URL
+                data: params,
+                success: function(result) {
+                    if (result.code === 200) {
+                        console.log(result.data)
+                        // 存储所有查询数据到全局变量
+                        totalAlarmData = result.data;
+                        // 初始化分页（默认第1页，每页10条）
+                        initLaypage(1, 10);
+                        layer.msg('查询成功', {icon: 1});
+                    } else {
+                        // 清空全局数据和表格
+                        totalAlarmData = [];
+                        $("tbody").empty().append('<tr><td colspan="6" align="center">暂无数据</td></tr>');
+                        // 清空分页
+                        $("#pageContainer").empty();
+                        layer.msg(result.message || '查询失败', {icon: 2});
+                    }
+                },
+                error: function() {
+                    totalAlarmData = [];
+                    $("tbody").empty().append('<tr><td colspan="6" align="center">服务器错误</td></tr>');
+                    $("#pageContainer").empty();
+                    layer.msg('服务器错误', {icon: 2});
+                }
+            });
+        });
+
+        // 初始化layui分页组件
+        function initLaypage(currPage, pageSize) {
+            var totalCount = totalAlarmData.length; // 总数据条数
+            laypage.render({
+                elem: 'pageContainer', // 分页容器ID
+                count: totalCount, // 总数据量
+                curr: currPage, // 当前页码
+                limit: pageSize, // 每页显示条数（固定10条）
+                limits: [10], // 仅提供10条/页的选项
+                layout: ['count', 'prev', 'page', 'next', 'limit', 'refresh', 'skip'], // 分页布局
+                jump: function(obj, first) {
+                    // obj包含当前分页的所有参数（curr:当前页，limit:每页条数）
+                    // first：是否首次渲染（首次不触发重复查询）
+                    if (!first) {
+                        // 非首次渲染，重新渲染表格数据
+                        renderTableByPage(obj.curr, obj.limit);
+                    } else {
+                        // 首次渲染，渲染第1页数据
+                        renderTableByPage(currPage, pageSize);
+                    }
+                }
+            });
+        }
+
+        // 根据页码和每页条数渲染表格数据
+        function renderTableByPage(currPage, pageSize) {
+            const tbody = $("tbody");
+            tbody.empty(); // 清空表格
+
+            if (totalAlarmData && totalAlarmData.length > 0) {
+                // 计算当前页数据的起始索引和结束索引
+                const startIndex = (currPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, totalAlarmData.length);
+                // 获取当前页需要显示的数据
+                const currentPageData = totalAlarmData.slice(startIndex, endIndex);
+
+                // 渲染当前页数据
+                currentPageData.forEach((item, index) => {
+                    const levelClass = item.alarm_level === '1' ? 'status-alarm' :
+                        (item.alarm_level === '2' ? 'status-pending' : 'status-resolved');
+                    const levelText = item.alarm_level === '1' ? '一级报警' :
+                        (item.alarm_level === '2' ? '二级报警' : '三级报警');
+                    // 表格行编号：(当前页-1)*每页条数 + 索引+1
+                    const serialNum = (currPage - 1) * pageSize + index + 1;
+                    const row = `<tr>
+                    <td>${serialNum}</td>
+                    <td>${displayAlarmRoom(item)}</td>
+                    <td>${item.alarm_content || '-'}</td>
+                    <td><span class="status-tag ${levelClass}">${levelText}</span></td>
+                    <td>${item.create_time || '-'}</td>
+                    <td>${displayAlarmEndTime(item)}</td>
+                </tr>`;
+                    tbody.append(row);
+                });
+            } else {
+                tbody.append('<tr><td colspan="6" align="center">暂无数据</td></tr>');
+            }
+        }
+
+        // 导出数据功能
+        // 导出数据功能
+        $('#exportBtn').on('click', function() {
+            if (totalAlarmData.length === 0) {
+                layer.msg('暂无数据可导出', {icon: 2});
+                return;
+            }
+
+            // 1. 构建CSV格式数据
+            // 表头
+            let csvContent = "编号,配电室名称,告警内容,级别,告警时间,结束时间\n";
+            // 表格数据
+            totalAlarmData.forEach((item, index) => {
+                const levelText = item.alarm_level === '1' ? '一级报警' :
+                    (item.alarm_level === '2' ? '二级报警' : '三级报警');
+                // 处理数据中的逗号（避免CSV格式错乱）
+                const alarmName = displayAlarmRoom(item).replace(/,/g, '，');
+                const alarmContent = (item.alarm_content || '-').replace(/,/g, '，');
+                // 拼接一行数据
+                const row = `${index + 1},${alarmName},${alarmContent},${levelText},${item.create_time || '-'},${displayAlarmEndTime(item)}\n`;
+                csvContent += row;
+            });
+
+            // 2. 创建下载链接并触发下载（修复核心：将\uFEFF包裹在字符串中）
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // 解决中文乱码
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // 设置下载文件名（含当前日期）
+            const today = formatDate(new Date());
+            a.download = `配电室报警数据_${today}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            // 释放资源
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+
+            layer.msg('导出成功', {icon: 1});
+        });
+        // 表单验证
+        form.render();
+    });
+
+    // 页面加载完成后自动查询一次
+    $(document).ready(function() {
+        $('#queryBtn').click(); // 触发查询
+    });
+</script>
+</body>
+</html>

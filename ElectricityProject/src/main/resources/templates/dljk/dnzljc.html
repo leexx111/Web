@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        #title_dnzljc{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*border: 1px solid #c7c7c5;*/
+        }
+
+        #unit1_dnzljc{
+            width: 100%;
+            height: 50px;
+            /*background-color: #6c0316;*/
+            margin-top: 5px;
+            display: flex;
+        }
+        #unit2_dnzljc{
+            width: 100%;
+            height: 20px;
+            text-align: center;
+            /*background-color: #6c0316;*/
+            margin-top: 5px;
+        }
+        #unit3_dnzljc{
+            width: 100%;
+            height: 600px;
+            /*background-color: #6c0316;*/
+            margin-top: 5px;
+        }
+        .clwzxlk{
+            width: 380px;
+            height: 500px;
+            position: absolute;
+            left: 120px;
+            top: 73px;
+            border: 1px solid black;
+            background-color: #fdfdfe;
+            display: none;
+            /*background-color: black;*/
+        }
+        .layui-tree-line {
+            height: 500px; /* 假设容器高度为300px */
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        .layui-select-title{
+            width: 400px;
+            height: 34px;
+            /*border: 2px solid rgba(24,24,24,0.98);*/
+            margin-left: 10px;
+        }
+    </style>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/ExcelJS/exceljs.min.js"></script>
+    <script src="../../static/ExcelJS/FileSaver.min.js"></script>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="treedata.js"></script>
+</head>
+<body>
+
+<div id="title_dnzljc">&nbsp;&nbsp;&nbsp;电能质量监测</div>
+
+<div id="unit1_dnzljc" class="layui-form">
+    <label style="width: 120px;text-align: center;padding-top: 6px">测量位置</label>
+<!--    <input type="text" id="pds" onclick="clwzdj()" placeholder="401:低压进线——" class="layui-input" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">-->
+    <input type="text" id="pds" onclick="clwzdj()" value="1AA6-1:6号核心筒照明1" class="layui-input" style="width: 200px;   ">
+
+    <label class="layui-form-label">时间范围</label>
+    <input type="text"  class="layui-input layui_timedate"   id="test1" style="width: 200px;">
+    <label class="" style="margin: 5px">至</label>
+
+    <input type="text"  class="layui-input  layui_timedate"   id="test2" style="width: 200px;">
+<!--    <input type="text" id="clwzs1" placeholder="有功电量" class="layui-input" style="width: 200px;margin-left: 20px; border: 2px solid rgba(24,24,24,0.98);">-->
+
+    <select  style="width: 100px;" id="xlsx">
+        <option value="V">电压</option>
+        <option value="A">电流</option>
+        <option value="kvar">有功功率</option>
+        <option value="Kvar">无功功率</option>
+        <option value="kva">视在功率</option>
+        <option value="kwh">有功电量</option>
+        <option value="kvarh">无功电量</option>
+    </select>
+    <button class="layui-btn" onclick="chaxunsj()" style="margin-left: 20px">查询</button>
+    <button class="layui-btn" onclick="exportToExcel()">导出</button>
+
+</div>
+<!--<div id="unit2_dnzljc">401-低压进线——电能曲线图</div>-->
+<div id="unit3_dnzljc">
+
+</div>
+<div style="" class="clwzxlk" id="navTree"></div>
+<script>
+    $ =layui.jquery;    // 简化后的导航数据
+    var cmsclwz ="";
+    layui.use('tree', function(){
+        const tree = layui.tree;
+        const layer = layui.layer;
+        tree.render({
+            elem: '#navTree',
+            data: treedata,
+            showLine: true,
+            className: 'custom-tree-class',
+            click: function (obj) {
+                document.getElementById('pds').value=obj.data.title;
+                cmsclwz =obj.data.extraInfo;
+                document.getElementById("navTree").style.display ='none';
+            }
+        });
+    });
+    let myChart = echarts.init(document.getElementById('unit3_dnzljc'));
+
+    // 指定图表的配置项和数据
+    var option = {
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['a项', 'b项','c项']
+        },
+        grid: {
+            left: "2%", // 图表距离容器左边框的距离，这里设置为10%
+            right: "2%", // 图表距离容器右边框的距离，这里设置为10%
+            bottom: "5%", // 图表距离容器下边框的距离，这里设置为10%
+            top: "10%", // 图表距离容器上边框的距离，这里设置为10%
+            containLabel: true // 确保grid区域包含坐标轴标签
+        },
+        dataZoom: [
+            {
+                type: 'inside',
+                start: 0,
+                end: 20
+            },
+            {
+                start: 0,
+                end: 20
+            }
+        ],
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+        },
+        yAxis: {
+            type: 'value',
+            name:'KW',
+
+        },
+        series: [
+            {
+                name: 'a项',
+                type: 'line',
+                // stack: 'Total',
+                data: [120, 132, 101, 134, 90, 230, 210, 123, 32, 132, 245, 213, 134, 90, 230, 210, 123, 32, 400, 231, 132, 245, 213, 134, 90, 230, 230, 210, 210, 123, 32, 113],
+                // data: receivedArrays,
+                markPoint: {
+                    data: [
+                        {
+                            type: 'max',
+                            name: 'Max'
+                        },
+                        {
+                            type: 'min',
+                            name: 'Min'
+                        }
+                    ]
+                }
+            },
+            {
+                name: 'b项',
+                type: 'line',
+                // stack: 'Totals',
+                data: [220, 182, 191, 234, 290, 330, 310, 90, 230, 210, 123, 32, 113, 120, 132, 101, 134, 90, 90, 230, 210, 123, 32, 251, 321, 192, 213, 134, 90, 100, 400],
+                // data: receivedArray
+
+                markPoint: {
+                    data: [
+                        {
+                            type: 'max',
+                            name: 'Max'
+                        },
+                        {
+                            type: 'min',
+                            name: 'Min'
+                        }
+                    ]
+                }
+            },
+            {
+                name: 'c项',
+                type: 'line',
+                // stack: 'Totals',
+                data: [190, 192, 191, 234, 190, 330, 310, 90, 230, 210, 123, 32, 113, 120, 132, 101, 134, 90, 90, 230, 210, 123, 32, 251, 321, 192, 213, 134, 90, 100, 400],
+                // data: receivedArray  开关
+                markPoint: {
+                    data: [
+                        {
+                            type: 'max',
+                            name: 'Max'
+                        },
+                        {
+                            type: 'min',
+                            name: 'Min'
+                        }
+                    ]
+                }
+            },
+        ]
+    };
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+    function clwzdj(){
+        document.getElementById("navTree").style.display ='block';
+    }
+    const clwzxlk = document.getElementById('clwzxlk');
+    
+    document.addEventListener('click', function (event) {
+        const target = event.target;
+        if (target.id !== 'pds' && !target.classList.contains('layui-icon')) {
+            // 在此处添加点击物体class不为aaa时要执行的代码
+            document.getElementById("navTree").style.display ='none';
+        }
+    });
+
+    layui.use(['table', 'form', 'laydate'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var dateType = 'day';
+        //执行一个laydate实例
+        laydate.render({
+            elem: '.layui_timedate' //指定时间元素
+        });
+
+        form.render('select');
+    });
+    //模仿后端传来的数据
+    var backendData = [
+        {
+            "time": "2024-01-01",
+            "line1": 10,
+            "line2": 15,
+            "line3": 20
+        },
+        {
+            "time": "2024-01-02",
+            "line1": 20,
+            "line2": 25,
+            "line3": 30
+        },
+        {
+            "time": "2024-01-03",
+            "line1": 30,
+            "line2": 35,
+            "line3": 40
+        }
+    ];
+    
+    function chaxunsj(){
+        myChart.dispose();
+        myChart = echarts.init(document.getElementById('unit3_dnzljc'));
+        //获取表单的数据 测量位置，时间范围（开始-结束） 数据类型
+        var clwz = document.getElementById('pds').value;
+        // var selectedText = document.getElementById('pds').options[selectElement.selectedIndex].text;
+
+        var kssj = document.getElementById('test1').value;
+        var jssj = document.getElementById('test2').value;
+
+// 将字符串转换为 Date 对象
+        var date = new Date(jssj);
+
+// 增加一天（直接修改 Date 对象）
+        date.setDate(date.getDate() + 1);
+
+// 将结果转换回字符串格式
+        var nextDay = date.toISOString().split('T')[0];  // 格式："2025-06-18"
+        var selectElement = document.getElementById('xlsx').value;
+        //发送到后端，拿到数据后做渲染
+
+        if (cmsclwz ==""){
+            cmsclwz ="1AA1-1";
+        }
+        $.ajax({
+            url: '/hdb/getdnzljcsj',
+            method: 'POST',
+            data: {
+                wz: cmsclwz,
+                ks:kssj,
+                js:nextDay,
+                lx:selectElement
+            },
+            success: function (response) {
+                // alert(clwz+"||"+kssj)
+                console.log(response)
+                var xAxisData = response.map(function (item) {
+                    return item.data;
+                });
+
+                // 处理折线数据
+                var seriesData = {};
+                response.forEach(function (item) {
+                    for (var key in item) {
+                        if (key!== 'data') {
+                            if (!seriesData[key]) {
+                                seriesData[key] = [];
+                            }
+                            seriesData[key].push(item[key]);
+                        }
+                    }
+                });
+                // 生成 ECharts 的 series 配置
+                var series = [];
+                var qudename =[];
+                for (var lineKey in seriesData) {
+                    series.push({
+                        name: lineKey,
+                        type: 'line',
+                        data: seriesData[lineKey],
+                        markPoint: {
+                            data: [
+                                {
+                                    type: 'max',
+                                    name: 'Max'
+                                },
+                                {
+                                    type: 'min',
+                                    name: 'Min'
+                                }
+                            ]
+                        }
+                    });
+                    qudename.push(lineKey);
+                }
+                var optionss = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: qudename
+                    },
+
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            start: 0,
+                            end: 20
+                        },
+                        {
+                            start: 0,
+                            end: 20
+                        }
+                    ],
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: xAxisData
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: selectElement
+                    },
+                    series: series,
+                };
+
+                myChart.setOption(optionss);
+            }
+        });
+    }
+
+    window.onload =function (){
+        chaxunsj();
+    };
+
+    // 导出数据到Excel
+    async function exportToExcel() {
+    // 获取选择的测量位置和数据类型（value值如"V"、"A"等）
+    const clwz = document.getElementById('pds').value;
+    const dataTypeValue = document.getElementById('xlsx').value; // 获取select的value值
+    const kssj = document.getElementById('test1').value;
+    const jssj = document.getElementById('test2').value;
+
+    // 数据类型映射：将select的value值对应到中文名称和字段标题
+    const typeConfig = {
+        'V': {
+            name: '电压',
+            titles: {
+                'Uan': 'A相电压(Uan)',
+                'Ubn': 'B相电压(Ubn)',
+                'Ucn': 'C相电压(Ucn)',
+            }
+        },
+        'A': {
+            name: '电流',
+            titles: {
+                'Ia': 'A相电流(Ia)',
+                'Ib': 'B相电流(Ib)',
+                'Ic': 'C相电流(Ic)',
+            }
+        },
+        'kvar': {
+            name: '有功功率',
+            titles: {
+                'W': '总有功功率(W)',
+                'Wa': 'A相有功功率(Wa)',
+                'Wb': 'B相有功功率(Wb)',
+                'Wc': 'C相有功功率(Wc)'
+            }
+        },
+        'Kvar': {
+            name: '无功功率',
+            titles: {
+                'Q': '总无功功率(Q)',
+                'Qa': 'A相无功功率(Qa)',
+                'Qb': 'B相无功功率(Qb)',
+                'Qc': 'C相无功功率(Qc)'
+            }
+        },
+        'kva': {
+            name: '视在功率',
+            titles: {
+                'S': '视在功率(S)'
+            }
+        },
+        'kwh': {
+            name: '有功电量',
+            titles: {
+                'Kwh': '总正向有功电量(Kwh)'
+            }
+        },
+        'kvarh': {
+            name: '无功电量',
+            titles: {
+                'KVarh': '总正向无功电量(KVarh)'
+            }
+        }
+    };
+
+    // 获取当前选中类型的配置（中文名称和字段标题）
+    const currentConfig = typeConfig[dataTypeValue];
+    if (!currentConfig) {
+        alert('未找到对应的数据类型配置');
+        return;
+    }
+
+    // 获取要导出的数据（与查询接口一致）
+    try {
+        const response = await $.ajax({
+            url: '/hdb/getdnzljcsj',
+            method: 'POST',
+            data: {
+                wz: clwz,
+                ks: kssj,
+                js: jssj,
+                lx: dataTypeValue // 发送select的value值（如"V"、"A"）
+            }
+        });
+
+        // 创建Excel工作簿
+        const workbook = new ExcelJS.Workbook();
+        
+        // 设置工作簿默认字体
+        workbook.views = [{
+            showGridLines: true,
+            defaultFont: {
+                name: '宋体',
+                size: 11
+            }
+        }];
+
+        // 创建工作表（使用中文名称作为表名）
+        const worksheet = workbook.addWorksheet(`${currentConfig.name}数据`);
+        
+        // 定义对齐样式
+        const centerAlign = { horizontal: 'center', vertical: 'middle' };
+        const leftAlign = { horizontal: 'left', vertical: 'middle' };
+
+        // 添加标题行（使用中文名称显示）
+        worksheet.mergeCells('A1:F1');
+        worksheet.getCell('A1').value = `${clwz} ${kssj}至${jssj} ${currentConfig.name}数据报表`;
+        worksheet.getCell('A1').font = { bold: true, size: 14, name: '宋体' };
+        worksheet.getCell('A1').alignment = centerAlign;
+
+        // 添加当前时间
+        const now = new Date();
+        const formattedDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+        worksheet.mergeCells('A2:F2');
+        worksheet.getCell('A2').value = `导出时间: ${formattedDate}`;
+        worksheet.getCell('A2').font = { name: '宋体', size: 11 };
+        worksheet.getCell('A2').alignment = leftAlign;
+
+        // 生成表头（第一列为时间，后续为对应数据字段）
+        const headerRow = ['时间'];
+        Object.values(currentConfig.titles).forEach(title => {
+            headerRow.push(title);
+        });
+        
+        // 设置表头样式
+        const headerCells = worksheet.addRow(headerRow);
+        headerCells.eachCell(cell => {
+            cell.font = { bold: true, name: '宋体', size: 11 };
+            cell.alignment = centerAlign;
+            // 设置边框
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+
+        // 填充数据
+        response.forEach(item => {
+            const rowData = [item.data]; // 第一列固定为时间
+            
+            // 按当前类型的字段填充数据
+            Object.keys(currentConfig.titles).forEach(key => {
+                rowData.push(item[key] !== undefined ? item[key] : '');
+            });
+            
+            // 添加行到工作表
+            const row = worksheet.addRow(rowData);
+            
+            // 设置单元格样式
+            row.eachCell(cell => {
+                cell.font = { name: '宋体', size: 11 };
+                cell.alignment = cell.col === 1 ? leftAlign : centerAlign;
+                // 设置边框
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // 调整列宽
+        worksheet.columns.forEach((column, index) => {
+            column.width = index === 0 ? 20 : 15; // 时间列更宽
+        });
+
+        // 生成Excel文件并下载（文件名使用中文名称）
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }), `${clwz}_${currentConfig.name}_${kssj}_to_${jssj}.xlsx`);
+
+    } catch (error) {
+        console.error('导出Excel失败:', error);
+        alert('导出Excel失败，请重试');
+    }
+}
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        var today = new Date();
+        var thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        var currentDate = formatDate(today);
+        var currentDates = formatDate(thirtyDaysAgo);
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#test1' //指定元素
+            , value: currentDates
+        });
+        laydate.render({
+            elem: '#test2' //指定元素
+            , value: currentDate
+        });
+    });
+
+</script>
+</body>
+</html>

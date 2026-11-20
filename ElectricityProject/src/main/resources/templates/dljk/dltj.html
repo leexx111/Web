@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        #title_dltj{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 10px;
+            /*border: 1px solid #c7c7c5;*/
+        }
+        #body_dltj{
+            width: 100%;
+            height: 700px;
+            /*background-color: #9a1010;*/
+        }
+        #unit1_dltj{
+            width: 100%;
+            height: 50px;
+            /*background-color: #6c0316;*/
+            margin-top: 5px;
+            display: flex;
+        }
+        #unit2_dltj{
+            width: 100%;
+            height: 30px;
+            /*background-color: #eeee0c;*/
+            text-align: center;
+        }
+        #unit3_dltj{
+            width: 100%;
+            height: 300px;
+            /*background-color: #eeee0c;*/
+            /*border: 1px solid red;*/
+        }
+        #unit4_dltj{
+            width: 100%;
+            height: 300px;
+            /*background-color: #eeee0c;*/
+            display: flex;
+        }
+        #unit4_1_dltj{
+            width: 45%;
+            height: 300px;
+            /*background-color: #00f361;*/
+            text-align: center;
+        }
+        #unit4_2_dltj{
+            width: 47%;
+            height: 300px;
+            /*background-color: #0039f3;*/
+            text-align: center;
+        }
+        #unit4_11_dltj{
+            text-align: left;
+            padding-left: 30px;
+            padding-bottom: 5px;
+        }
+        #unit4_12_dltj{
+            width: 90%;
+            height: 280px;
+            padding-left: 10%;
+        }
+        #unit4_22_dltj{
+            width: 90%;
+            height: 280px;
+            /*padding-left: 15%;*/
+            margin-left: 10%;
+        }
+
+
+        .clwzxlk{
+            width: 530px;
+            height: 800px;
+            position: absolute;
+            left: 430px;
+            top: 73px;
+            border: 1px solid black;
+            background-color: #fdfdfe;
+            display: none;
+            overflow-x: auto;
+            overflow-y: auto;
+            /*background-color: black;*/
+        }
+        /*.layui-tree {*/
+        /*    max-width: 400px; !* 可根据需要调整 *!*/
+        /*    overflow-x: auto;*/
+        /*    overflow-y: hidden;*/
+        /*    white-space: nowrap;*/
+        /*}*/
+
+        .tree-container {
+            border-radius: 4px;
+
+            width: 500px; /* 新增：固定宽度300px */
+            overflow-x: auto; /* 新增：水平溢出时显示滚动条 */
+            overflow-y: auto; /* 新增：水平溢出时显示滚动条 */
+        }
+        .tree-node {
+            /*margin: 6px 0;*/
+            position: relative;
+            padding: 3px 4px;
+            /*padding: 6px 8px;*/
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .tree-node:hover {
+            background-color: #f8f8f8;
+        }
+        .tree-children {
+            margin-left: 28px;
+            border-left: 1px dashed #e6e6e6;
+            padding-left: 16px;
+            display: none;
+        }
+        .tree-node.open > .tree-children {
+            display: block;
+        }
+        .node-content {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .node-checkbox {
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .node-icon {
+            margin-right: 8px;
+            color: #009688;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+        .node-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .node-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .node-title:hover {
+            color: #009688;
+        }
+        .action-bar {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .popup-content {
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow: auto;
+            padding: 15px;
+        }
+        .popup-node {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+        .popup-header {
+            color: #009688;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .popup-row {
+            margin-bottom: 8px;
+            display: flex;
+        }
+        .popup-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: #555;
+        }
+        .popup-value {
+            flex: 1;
+        }
+    </style>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+</head>
+<body style="overflow: hidden;">
+<div id="title_dltj">电量统计分析</div>
+<div id="body_dltj">
+
+    <div id="unit1_dltj">
+        <label style="width: 120px;text-align: center;padding-top: 6px">配电室</label>
+<!--        <input type="text" id="pds" placeholder="西区1#配电室" class="layui-input" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">-->
+        <select  style="width: 200px;height: 38px; " id="xlsx" class="layui-select" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+            <option value="All">所有</option>
+            <option value="W1#">西区1#配电室</option>
+            <option value="E2#">东区2#配电室</option>
+            <option value="E6#">东区6#配电室</option>
+        </select>
+        <label class="layui-form-label">测量位置</label>
+        <input type="text" id="clwz" onclick="clwzdj()" placeholder="总计" class="layui-input" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+
+<!--        <div style="width: 70px;"></div>-->
+<!--        <label class="layui-form-label">时间</label>-->
+        <button id="btn-year" class="layui-btn layui-btn-primary" style="margin-left: 25px">年</button>
+        <button id="btn-month" class="layui-btn " style="margin-left: 0px">月</button>
+        <button id="btn-day" class="layui-btn layui-btn-primary" style="margin-right: 5px;margin-left: 0px">日</button>
+        <input  type="text" class="layui-input"   id="test1" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+
+        <button class="layui-btn" style="margin-left: 20px" id="DFchaxun" >查询</button>
+        <button class="layui-btn">打印表单</button>
+
+    </div>
+    <div id="unit2_dltj">
+<!--        新增竖井汇总-->
+        <h2 id="bt_h2">
+        新增竖井汇总-电量统计分析（2025-9）
+        </h2>
+    </div>
+    <div id="unit3_dltj">
+
+    </div>
+    <div id="unit4_dltj">
+        <div id="unit4_1_dltj">
+            <div id="unit4_11_dltj">
+                尖峰平谷的有功分布图  <span style="margin-left:5px;color: #00F7DE" id="ygfb">(总电量 : 22121.8 kWh)</span>
+            </div>
+            <div id="unit4_12_dltj"></div>
+        </div>
+        <div id="unit4_2_dltj">
+
+            <div id="unit4_21_dltj" style="text-align: left;padding-left: 20px">
+                尖峰平谷的电费分布图  <span style="margin-left:5px;color: #00F7DE" id="dffb">(总电费 : 20723.8 kWh)</span>
+            </div>
+            <div id="unit4_22_dltj"></div>
+        </div>
+    </div>
+</div>
+
+<div style="" class="clwzxlk" id="navTree">
+        <div class="tree-container">
+            <div id="treeRoot"></div>
+        </div>
+</div>
+<script>
+    $ =layui.jquery;    // 简化后的导航数据
+    function clwzdj(){
+        document.getElementById("navTree").style.display ='block';
+    }
+    // const clwzxlk = document.getElementById('clwzxlk');
+
+    document.addEventListener('click', function (event) {
+        const target = event.target;
+        if (target.id !== 'clwz' && !target.classList.contains('layui-icon') && !target.classList.contains('node-checkbox')    ) {
+            // 在此处添加点击物体class不为aaa时要执行的代码
+            document.getElementById("navTree").style.display ='none';
+            //隐藏菜单时获取内容
+            const selects = [];
+            document.querySelectorAll('.node-checkbox:checked').forEach(checkbox => {
+                selects.push(JSON.parse(checkbox.dataset.node));
+            });
+
+            if (selects.length === 0) {
+                document.getElementById('clwz').value ="总计";
+            }else {
+                var cmsdemo1 =[];
+                selects.forEach((node,index) =>{
+                    cmsdemo1.push(node.name);
+                });
+                document.getElementById('clwz').value =cmsdemo1[0];
+            }
+        }
+    });
+
+    // 定义数据
+    function BingT(BingTu1,BingTu2){
+        // 配置项
+        var option_data_unit4_12_dltj = {
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: ['平', '谷', '尖', '峰']
+            },
+            series: [
+                {
+                    name: '电量分布',
+                    type: 'pie',
+                    radius: '50%',
+                    data: BingTu1,
+                    label: {
+                        show: true,
+                        formatter: '{b}: {c} KWh ({d}%)'
+                    }
+                }
+            ]
+        };
+        // 配置项
+        var option_data_unit4_22_dltj = {
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: ['平段电费', '谷段电费', '尖段电费', '峰段电费']
+            },
+            tooltip: {
+                trigger: 'item'
+            },
+            series: [
+                {
+                    name: '电量分布',
+                    type: 'pie',
+                    radius: '50%',
+                    data: BingTu2,
+                    label: {
+                        show: true,
+                        formatter: '{b}: {c}元 ({d}%)'
+                    }
+                }
+            ]
+        };
+        const ygDom = document.getElementById('unit4_12_dltj');
+        const dfDom = document.getElementById('unit4_22_dltj');
+
+        pieChartYgInstance = echarts.getInstanceByDom(ygDom) || echarts.init(ygDom);
+        pieChartDfInstance = echarts.getInstanceByDom(dfDom) || echarts.init(dfDom);
+
+        pieChartYgInstance.setOption(option_data_unit4_12_dltj, true);
+        pieChartDfInstance.setOption(option_data_unit4_22_dltj, true);
+
+    }
+
+    // 基于准备好的dom，初始化echarts实例
+    // 定义数据
+    let barChartInstance = null;
+    let pieChartYgInstance = null;
+    let pieChartDfInstance = null;
+
+    function peizhix(xAxisData,yAxisData1,yAxisData2,datatest){
+        console.log(datatest);
+
+        const barDom = document.getElementById('unit3_dltj');
+        barChartInstance = echarts.getInstanceByDom(barDom) || echarts.init(barDom);
+
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: [datatest+'有功', datatest+'电费']
+            },
+            xAxis: {
+                type: 'category',
+                data: xAxisData
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'kWh',
+                    position: 'left'
+                },
+                {
+                    type: 'value',
+                    name: '元',
+                    position: 'right'
+                }
+            ],
+            series: [
+                {
+                    name: datatest+'有功',
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: yAxisData1
+                },
+                {
+                    name: datatest+'电费',
+                    type: 'bar',
+                    yAxisIndex: 1,
+                    data: yAxisData2
+                }
+            ]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        barChartInstance.setOption(option, true);
+
+    }
+
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        var queryType = 'month';
+
+        var today = new Date();
+        var year = today.getFullYear();
+        var month = (today.getMonth() + 1).toString().padStart(2, '0');
+        var day = today.getDate().toString().padStart(2, '0');
+
+        var currentDay = year + '-' + month + '-' + day;
+        var currentMonth = year + '-' + month;
+        var currentYear = String(year);
+
+        function getLaydateType(type) {
+            if (type === 'year') return 'year';
+            if (type === 'month') return 'month';
+            return 'date';
+        }
+
+        function getDefaultValue(type) {
+            if (type === 'year') return currentYear;
+            if (type === 'month') return currentMonth;
+            return currentDay;
+        }
+
+        function renderPicker(type) {
+            laydate.render({
+                elem: '#test1',
+                type: getLaydateType(type),
+                value: getDefaultValue(type)
+            });
+        }
+
+        renderPicker(queryType);
+        localStorage.setItem('myCachedValue', queryType);
+
+        document.getElementById('btn-year').addEventListener('click', function () {
+            queryType = 'year';
+            renderPicker(queryType);
+
+            this.classList.remove("layui-btn-primary");
+            document.getElementById('btn-month').classList.add("layui-btn-primary");
+            document.getElementById('btn-day').classList.add("layui-btn-primary");
+
+            localStorage.setItem('myCachedValue', queryType);
+        });
+
+        document.getElementById('btn-month').addEventListener('click', function () {
+            queryType = 'month';
+            renderPicker(queryType);
+
+            this.classList.remove("layui-btn-primary");
+            document.getElementById('btn-year').classList.add("layui-btn-primary");
+            document.getElementById('btn-day').classList.add("layui-btn-primary");
+
+            localStorage.setItem('myCachedValue', queryType);
+        });
+
+        document.getElementById('btn-day').addEventListener('click', function () {
+            queryType = 'day';
+            renderPicker(queryType);
+
+            this.classList.remove("layui-btn-primary");
+            document.getElementById('btn-year').classList.add("layui-btn-primary");
+            document.getElementById('btn-month').classList.add("layui-btn-primary");
+
+            localStorage.setItem('myCachedValue', queryType);
+        });
+    });
+
+
+    const treeDataW1 = [
+        {
+            id: 1,
+            name: "西区1#配电室",
+            budget:"",
+            open: true,
+            children: [
+                {
+                    id: 11,
+                    name: "201:1#进线柜",
+                    budget: "",
+                    open: true,
+                    children: [
+                        {
+                            name: "211:1#变压器",
+                            budget: "1AA1-1",
+                            children: [
+                                {
+                                    name: "401#低压进线一",
+                                    budget: "",
+                                    children: [
+                                        {name: '1AA6-1:6 号核心筒照明 1', budget: "1AA6-1"},
+                                        {name: '1AA6-2: 景观照明预留 1', budget: "1AA6-2"},
+                                        {name: '1AA6-3: 备用 ', budget: "1AA6-3"},
+                                        {name: '1AA6-4: 备用 ', budget: "1AA6-4"},
+                                        {name: '1AA7-1:7 号核心筒照明 3', budget: "1AA7-1"},
+                                        {name: '1AA7-2: 景观照明预留 2', budget: "1AA7-2"},
+                                        {name: '1AA7-3: 备用 ', budget: "1AA7-3"},
+                                        {name: '1AA7-4: 备用 ', budget: "1AA7-4"},
+                                        {name: '1AA8-1:10 号核心筒照明 5', budget: "1AA8-1"},
+                                        {name: '1AA8-2: 照明 13', budget: "1AA8-2"},
+                                        {name: '1AA8-3: 照明 14', budget: "1AA8-3"},
+                                        {name: '1AA8-4: 备用 ', budget: "1AA8-4"},
+                                        {name: '1AA8-5: 备用 ', budget: "1AA8-5"},
+                                        {name: '1AA9-1:11 号核心筒照明 7', budget: "1AA9-1"},
+                                        {name: '1AA9-2: 备用 ', budget: "1AA9-2"},
+                                        {name: '1AA9-3: 备用 ', budget: "1AA9-3"},
+                                        {name: '1AA9-4: 备用 ', budget: "1AA9-4"},
+                                        {name: '1AA10-1: 照明 9', budget: "1AA10-1"},
+                                        {name: '1AA10-2: 照明 10', budget: "1AA10-2"},
+                                        {name: '1AA10-3: 照明 11', budget: "1AA10-3"},
+                                        {name: '1AA10-4: 照明 12', budget: "1AA10-4"},
+                                        {name: '1AA10-5: 备用 ', budget: "1AA10-5"},
+                                        {name: '1AA10-6: 备用 ', budget: "1AA10-6"},
+                                        {name: '1AA10-7: 备用 ', budget: "1AA10-7"},
+                                        {name: '1AA11-1: 交易办公负荷 1（备用）', budget: "1AA11-1"},
+                                        {name: '1AA11-2: 交易办公负荷 2（备用）', budget: "1AA11-2"},
+                                        {name: '1AA11-3: 备用 ', budget: "1AA11-3"},
+                                        {name: '1AA11-4: 董事会同声传译室 ', budget: "1AA11-4"},
+                                        {name: '1AA11-5: 档案室 ', budget: "1AA11-5"},
+                                        {name: '1AA11-6: 备用 ', budget: "1AA11-6"},
+                                        {name: '1AA11-7: 备用 ', budget: "1AA11-7"},
+                                        {name: '1AA11-8: 备用 ', budget: "1AA11-8"},
+                                        {name: '1AA12-1: 交易办公负荷 ', budget: "1AA12-1"},
+                                        {name: '1AA12-2: 副行政办公区负荷 1（备用）', budget: "1AA12-2"},
+                                        {name: '1AA12-3: 副行政办公区负荷 2（备用）', budget: "1AA12-3"},
+                                        {name: '1AA12-4: 备用 ', budget: "1AA12-4"},
+                                        {name: '1AA12-5: 备用 ', budget: "1AA12-5"},
+                                        {name: '1AA12-6: 备用 ', budget: "1AA12-6"},
+                                        {name: '1AA12-7: 备用 ', budget: "1AA12-7"},
+                                        {name: '1AA13-1: 行政办公区负荷 1（备用）', budget: "1AA13-1"},
+                                        {name: '1AA13-2: 行政办公区负荷 2', budget: "1AA13-2"},
+                                        {name: '1AA13-3: 行政办公区负荷 3', budget: "1AA13-3"},
+                                        {name: '1AA13-4: 行政办公区负荷 4', budget: "1AA13-4"},
+                                        {name: '1AA13-5: 董事会 ', budget: "1AA13-5"},
+                                        {name: '1AA13-6: 备用 ', budget: "1AA13-6"},
+                                        {name: '1AA13-7: 备用 ', budget: "1AA13-7"},
+                                        {name: '1AA13-8: 备用 ', budget: "1AA13-8"},
+                                        {name: '1AA14-1:6 号核心筒办公区重要负荷 1', budget: "1AA14-1"},
+                                        {name: '1AA14-2:6 号核心筒办公区重要负荷 2', budget: "1AA14-2"},
+                                        {name: '1AA14-3:6 号核心筒办公区重要负荷 3', budget: "1AA14-3"},
+                                        {name: '1AA14-4:6 号核心筒办公区重要负荷 4', budget: "1AA14-4"},
+                                        {name: '1AA14-5:6 号核心筒办公区重要负荷 5', budget: "1AA14-5"},
+                                        {name: '1AA14-6:6 号核心筒办公区重要负荷 6', budget: "1AA14-6"},
+                                        {name: '1AA14-7:6 号核心筒办公区重要负荷 7', budget: "1AA14-7"},
+                                        {name: '1AA14-8:6 号核心筒办公区重要负荷 8', budget: "1AA14-8"},
+                                        {name: '1AA14-9: 备用 ', budget: "1AA14-9"},
+                                        {name: '1AA15-1: 备用 ', budget: "1AA15-1"},
+                                        {name: '1AA15-2: 备用 ', budget: "1AA15-2"},
+                                        {name: '1AA15-3: 扶梯 / 擦窗（备用）', budget: "1AA15-3"},
+                                        {name: '1AA15-4: 中水泵房（备用）', budget: "1AA15-4"},
+                                        {name: '1AA15-5: 备用 ', budget: "1AA15-5"},
+                                        {name: '1AA15-6: 备用 ', budget: "1AA15-6"},
+                                        {name: '1AA16-1:6 号核心筒客梯 1（备用）', budget: "1AA16-1"},
+                                        {name: '1AA16-2:7 号核心筒客梯 2（备用）', budget: "1AA16-2"},
+                                        {name: '1AA16-3:10 号核心筒客梯 3（备用）', budget: "1AA16-3"},
+                                        {name: '1AA16-4:11 号核心筒客梯 4（备用）', budget: "1AA16-4"},
+                                        {name: '1AA16-5: 潜污泵 1（备用）', budget: "1AA16-5"},
+                                        {name: '1AA16-6: 潜污泵 2（备用）', budget: "1AA16-6"},
+                                        {name: '1AA16-7: 给水泵房（备用）', budget: "1AA16-7"},
+                                        {name: '1AA16-8: 备用 ', budget: "1AA16-8"},
+                                        {name: '1AA16-9: 备用 ', budget: "1AA16-9"},
+                                        {name: '445: 联络柜 ', budget: "445"},
+                                        {name: '1AA5: 有源滤波柜 ', budget: "1AA5"}
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            name: "211:3#变压器",
+                            budget: "",
+                            children: [
+                                {
+                                    id: 1111,
+                                    name: "403#低压进线三",
+                                    budget: "3AA1-1",
+                                    children: [
+                                        {name: '3AA6-1: 充电桩 1', budget: "3AA6-1"},
+                                        {name: '3AA6-2: 充电桩 2', budget: "3AA6-2"},
+                                        {name: '3AA6-3: 充电桩 3', budget: "3AA6-3"},
+                                        {name: '3AA6-4: 充电桩 4', budget: "3AA6-4"},
+                                        {name: '3AA6-5: 备用 ', budget: "3AA6-5"},
+                                        {name: '3AA7-1: 充电桩 5', budget: "3AA7-1"},
+                                        {name: '3AA7-2: 空调设备', budget: "3AA7-2"},
+                                        {name: '3AA7-3: 空调设备', budget: "3AA7-3"},
+                                        {name: '3AA7-4: 备用 ', budget: "3AA7-4"},
+                                        {name: '3AA7-5: 备用 ', budget: "3AA7-5"},
+                                        {name: '3AA8-1: 空调设备 11', budget: "3AA8-1"},
+                                        {name: '3AA8-2: 空调设备 12', budget: "3AA8-2"},
+                                        {name: '3AA8-3: 空调设备 13', budget: "3AA8-3"},
+                                        {name: '3AA8-4: 备用 ', budget: "3AA8-4"},
+                                        {name: '3AA9-1:6/7/10/11 号核心筒应急照明（备用）', budget: "3AA9-1"},
+                                        {name: '3AA9-2:1 号变配电室 1 号柴发机房（备用）', budget: "3AA9-2"},
+                                        {name: '3AA9-3: 一二期消防安防控制室消防设备 ', budget: "3AA9-3"},
+                                        {name: '3AA9-4: 备用 ', budget: "3AA9-4"},
+                                        {name: '3AA9-5: 备用 ', budget: "3AA9-5"},
+                                        {name: '3AA9-6: 备用 ', budget: "3AA9-6"},
+                                        {name: '3AA9-7: 备用 ', budget: "3AA9-7"},
+                                        {name: '3AA8-1: 空调设备 11', budget: "3AA8-1"},
+                                        {name: '3AA8-2: 空调设备 12', budget: "3AA8-2"},
+                                        {name: '3AA8-3: 空调设备 13', budget: "3AA8-3"},
+                                        {name: '3AA8-4: 备用 ', budget: "3AA8-4"},
+                                        {name: '3AA9-1:6/7/10/11 号核心筒应急照明（备用）', budget: "3AA9-1"},
+                                        {name: '3AA9-2:1 号变配电室 1 号柴发动机房（备用）', budget: "3AA9-2"},
+                                        {name: '3AA9-3: 一二期消防安防控制室消防设备 ', budget: "3AA9-3"},
+                                        {name: '3AA9-4: 备用 ', budget: "3AA9-4"},
+                                        {name: '3AA9-5: 备用 ', budget: "3AA9-5"},
+                                        {name: '3AA9-6: 备用 ', budget: "3AA9-6"},
+                                        {name: '3AA9-7: 备用 ', budget: "3AA9-7"},
+                                        {name: '3AA10-1: 消防潜污泵 3 (备用)', budget: "3AA10-1"},
+                                        {name: '3AA10-2: 消防潜污泵 4 (备用)', budget: "3AA10-2"},
+                                        {name: '3AA10-3: 消防稳压泵 ', budget: "3AA10-3"},
+                                        {name: '3AA10-4: 备用 ', budget: "3AA10-4"},
+                                        {name: '3AA10-5: 备用 ', budget: "3AA10-5"},
+                                        {name: '3AA10-6: 备用 ', budget: "3AA10-6"},
+                                        {name: '3AA11-1: 消防风机 1（备用）', budget: "3AA11-1"},
+                                        {name: '3AA11-2: 消防风机 2（备用）', budget: "3AA11-2"},
+                                        {name: '3AA11-3: 消防风机 3（备用）', budget: "3AA11-3"},
+                                        {name: '3AA11-4: 消防风机 4（备用）', budget: "3AA11-4"},
+                                        {name: '3AA11-5: 消防风机 5（备用）', budget: "3AA11-5"},
+                                        {name: '3AA11-6: 备用 ', budget: "3AA11-6"},
+                                        {name: '3AA11-7: 备用 ', budget: "3AA11-7"},
+                                        {name: '3AA12-1: 消防风机 6（备用）', budget: "3AA12-1"},
+                                        {name: '3AA12-2: 消防风机 7（备用）', budget: "3AA12-2"},
+                                        {name: '3AA12-3: 消防风机 8（备用）', budget: "3AA12-3"},
+                                        {name: '3AA12-4: 消防风机 9（备用）', budget: "3AA12-4"},
+                                        {name: '3AA12-5: 消防风机 10（备用）', budget: "3AA12-5"},
+                                        {name: '3AA12-6: 备用 ', budget: "3AA12-6"},
+                                        {name: '3AA13-1: 消防水泵房（备用）', budget: "3AA13-1"},
+                                        {name: '3AA13-2: 消防潜污泵 1（备用）', budget: "3AA13-2"},
+                                        {name: '3AA13-3: 消防潜污泵 2（备用）', budget: "3AA13-3"},
+                                        {name: '3AA13-4: 备用 ', budget: "3AA13-4"},
+                                        {name: '3AA13-5: 备用 ', budget: "3AA13-5"},
+                                        {name: '3AA14-1: 一期和二期网络机房（备用）', budget: "3AA14-1"},
+                                        {name: '3AA14-2: 一期和二期网络机房空调 ', budget: "3AA14-2"},
+                                        {name: '3AA14-3: 备用 ', budget: "3AA14-3"},
+                                        {name: '3AA14-4: 备用 ', budget: "3AA14-4"},
+                                        {name: '3AA14-5: 备用 ', budget: "3AA14-5"},
+                                        {name: '3AA15-1: 一期和二期消防安防控制室安防设备 ', budget: "3AA15-1"},
+                                        {name: '3AA15-2:AIIB 安防存储机房（备用）', budget: "3AA15-2"},
+                                        {name: '3AA15-3:AIIB 交易设备机房（备用）', budget: "3AA15-3"},
+                                        {name: '3AA15-4: 备用 ', budget: "3AA15-4"},
+                                        {name: '3AA16-1: 弱电 CA 用电 (备用)', budget: "3AA16-1"},
+                                        {name: '3AA16-2: 弱电 SA 用电 (备用)', budget: "3AA16-2"},
+                                        {name: '3AA16-3: 弱电 ELV 用电 (备用)', budget: "3AA16-3"},
+                                        {name: '3AA16-4: 卫星接收机房和卫星通讯机房 (备用)', budget: "3AA16-4"},
+                                        {name: '3AA16-5: 备用 ', budget: "3AA16-5"},
+                                        {name: '3AA16-6: 备用 ', budget: "3AA16-6"},
+                                        {name: '3AA17-1: 备用 ', budget: "3AA17-1"},
+                                        {name: '3AA17-2: 备用 ', budget: "3AA17-2"},
+                                        {name: '3AA17-3: 电动排烟窗 1', budget: "3AA17-3"},
+                                        {name: '3AA17-4: 电动排烟窗 2', budget: "3AA17-4"},
+                                        {name: '3AA17-5: 办公区电动窗 2', budget: "3AA17-5"},
+                                        {name: '3AA17-6: 消防电梯 1（备用）', budget: "3AA17-6"},
+                                        {name: '3AA17-6: 消防电梯 2（备用）', budget: "3AA17-7"},
+                                        {name: '3AA18-1: 消防电梯 3（备用）', budget: "3AA18-1"},
+                                        {name: '3AA18-2: 消防电梯 4（备用）', budget: "3AA18-2"},
+                                        {name: '3AA18-3: 热交换站 ', budget: "3AA18-3"},
+                                        {name: '3AA18-4: 备用 ', budget: "3AA18-4"},
+                                        {name: '3AA18-5: 备用 ', budget: "3AA18-5"},
+                                        {name: '3AA18-6: 备用 ', budget: "3AA18-6"},
+                                        {name: '467: 联络柜 ', budget: "467"},
+                                        {name: '3AA5: 有源滤波柜 ', budget: "3AA5"}
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 13,
+                    name: "202:2#进线柜",
+                    budget: "",
+                    open: true,
+                    children: [
+                        {
+                            name: "211:2#变压器",
+                            budget: "",
+                            children: [
+                                {
+                                    name: "402#低压进线二",
+                                    budget: "2AA15-1",
+                                    children: [
+                                        {name: '2AA11-1:6 号核心筒照明 2', budget: "2AA11-1"},
+                                        {name: '2AA11-2: 备用 ', budget: "2AA11-2"},
+                                        {name: '2AA11-3: 备用 ', budget: "2AA11-3"},
+                                        {name: '2AA11-4: 备用 ', budget: "2AA11-4"},
+                                        {name: '2AA10-1:7 号核心筒照明 4', budget: "2AA10-1"},
+                                        {name: '2AA10-2: 备用 ', budget: "2AA10-2"},
+                                        {name: '2AA10-3: 备用 ', budget: "2AA10-3"},
+                                        {name: '2AA10-4: 备用 ', budget: "2AA10-4"},
+                                        {name: '2AA9-1:10 号核心筒照明 5', budget: "2AA9-1"},
+                                        {name: '2AA9-2: 备用 ', budget: "2AA9-2"},
+                                        {name: '2AA9-3: 备用 ', budget: "2AA9-3"},
+                                        {name: '2AA9-4: 备用 ', budget: "2AA9-4"},
+                                        {name: '2AA8-1:11 号核心筒照明 8', budget: "2AA8-1"},
+                                        {name: '2AA8-2: 备用 ', budget: "2AA8-2"},
+                                        {name: '2AA8-3: 备用 ', budget: "2AA8-3"},
+                                        {name: '2AA8-4: 备用 ', budget: "2AA8-4"},
+                                        {name: '2AA7-1: 扶梯 / 擦窗机 ', budget: "2AA7-1"},
+                                        {name: '2AA7-2: 备用 ', budget: "2AA7-2"},
+                                        {name: '2AA7-3: 备用 ', budget: "2AA7-3"},
+                                        {name: '2AA7-4: 中水泵房 ', budget: "2AA7-4"},
+                                        {name: '2AA7-5: 备用 ', budget: "2AA7-5"},
+                                        {name: '2AA7-6: 董事会、同声传译室（备用）', budget: "2AA7-6"},
+                                        {name: '2AA7-7: 备用 ', budget: "2AA7-7"},
+                                        {name: '2AA7-8: 备用 ', budget: "2AA7-8"},
+                                        {name: '2AA7-9: 备用 ', budget: "2AA7-9"},
+                                        {name: '2AA6: 双电源切换柜 ', budget: "2AA6"},
+                                        {name: '2AA5-1: 走道照明 1', budget: "2AA5-1"},
+                                        {name: '2AA5-2: 走道照明 2', budget: "2AA5-2"},
+                                        {name: '2AA5-3: 备用 ', budget: "2AA5-3"},
+                                        {name: '2AA5-4: 董事会、同声传译室（备用）', budget: "2AA5-4"},
+                                        {name: '2AA5-5: 档案室（备用）', budget: "2AA5-5"},
+                                        {name: '2AA5-6: 备用 ', budget: "2AA5-6"},
+                                        {name: '2AA5-7: 备用 ', budget: "2AA5-7"},
+                                        {name: '2AA5-8: 备用 ', budget: "2AA5-8"},
+                                        {name: '2AA5-9: 备用 ', budget: "2AA5-9"},
+                                        {name: '2AA4-1: 交易办公负荷 ', budget: "2AA4-1"},
+                                        {name: '2AA4-2: 副行政办公区负荷 1（备用）', budget: "2AA4-2"},
+                                        {name: '2AA4-3: 副行政办公区负荷 2（备用）', budget: "2AA4-3"},
+                                        {name: '2AA4-4: 备用 ', budget: "2AA4-4"},
+                                        {name: '2AA4-5: 备用 ', budget: "2AA4-5"},
+                                        {name: '2AA4-6: 备用 ', budget: "2AA4-6"},
+                                        {name: '2AA4-7: 备用 ', budget: "2AA4-7"},
+                                        {name: '2AA3-1: 行政办公区负荷 1', budget: "2AA3-1"},
+                                        {name: '2AA3-2: 行政办公区负荷 2（备用）', budget: "2AA3-2"},
+                                        {name: '2AA3-3: 行政办公区负荷 3（备用）', budget: "2AA3-3"},
+                                        {name: '2AA3-4: 行政办公区负荷 4（备用）', budget: "2AA3-4"},
+                                        {name: '2AA3-5: 董事会（备用）', budget: "2AA3-5"},
+                                        {name: '2AA3-6: 备用 ', budget: "2AA3-6"},
+                                        {name: '2AA3-7: 备用 ', budget: "2AA3-7"},
+                                        {name: '2AA3-8: 备用 ', budget: "2AA3-8"},
+                                        {name: '2AA2-1:6 号核心筒办公区重要负荷 1（备用）', budget: "2AA2-1"},
+                                        {name: '2AA2-2:6 号核心筒办公区重要负荷 2（备用）', budget: "2AA2-2"},
+                                        {name: '2AA2-3:10 号核心筒办公区重要负荷 3（备用）', budget: "2AA2-3"},
+                                        {name: '2AA2-4:10 号核心筒办公区重要负荷 4（备用）', budget: "2AA2-4"},
+                                        {name: '2AA2-5:7 号核心筒办公区重要负荷 5（备用）', budget: "2AA2-5"},
+                                        {name: '2AA2-6:7 号核心筒办公区重要负荷 6（备用）', budget: "2AA2-6"},
+                                        {name: '2AA2-7:11 号核心筒办公区重要负荷 7（备用）', budget: "2AA2-7"},
+                                        {name: '2AA2-8:11 号核心筒办公区重要负荷 8（备用）', budget: "2AA2-8"},
+                                        {name: '2AA2-9: 备用 ', budget: "2AA2-9"},
+                                        {name: '2AA1-1: 备用 ', budget: "2AA1-1"},
+                                        {name: '2AA1-2: 备用 ', budget: "2AA1-2"},
+                                        {name: '2AA1-3:6 号核心筒客梯 1', budget: "2AA1-3"},
+                                        {name: '2AA1-4:7 号核心筒客梯 2', budget: "2AA1-4"},
+                                        {name: '2AA1-5:10 号核心筒客梯 3', budget: "2AA1-5"},
+                                        {name: '2AA1-6:11 号核心筒客梯 4', budget: "2AA1-6"},
+                                        {name: '2AA1-7: 潜污泵 1', budget: "2AA1-7"},
+                                        {name: '2AA1-8: 潜污泵 2', budget: "2AA1-8"},
+                                        {name: '2AA1-9: 给水泵房 ', budget: "2AA1-9"},
+                                        {name: '2AA12: 有源滤波柜 ', budget: "2AA12"}
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            name: "211:4#变压器",
+                            budget: "",
+                            children:[
+                                {
+                                    name: "404#低压进线四",
+                                    budget: "4AA17-1",
+                                    children: [
+                                        {name: '4AA13-1: 空调设备 1', budget: "4AA13-1"},
+                                        {name: '4AA13-2: 空调设备 2', budget: "4AA13-2"},
+                                        {name: '4AA13-3: 空调设备 3', budget: "4AA13-3"},
+                                        {name: '4AA13-4: 备用 ', budget: "4AA13-4"},
+                                        {name: '4AA13-5: 备用 ', budget: "4AA13-5"},
+                                        {name: '4AA12-1: 空调设备 4', budget: "4AA12-1"},
+                                        {name: '4AA12-2: 空调设备 5', budget: "4AA12-2"},
+                                        {name: '4AA12-3: 空调设备 6', budget: "4AA12-3"},
+                                        {name: '4AA12-4: 备用 ', budget: "4AA12-4"},
+                                        {name: '4AA12-5: 备用 ', budget: "4AA12-5"},
+                                        {name: '4AA11-1:15 层厨房 ', budget: "4AA11-1"},
+                                        {name: '4AA11-2: 备用 ', budget: "4AA11-2"},
+                                        {name: '4AA11-3: 备用 ', budget: "4AA11-3"},
+                                        {name: '4AA11-4: 备用 ', budget: "4AA11-4"},
+                                        {name: '4AA11-5: 备用 ', budget: "4AA11-5"},
+                                        {name: '4AA10: 双电源切换柜 ', budget: "4AA10"},
+                                        {name: '4AA9-1:6/7/10/11 号核心筒应急照明 ', budget: "4AA9-1"},
+                                        {name: '4AA9-2:1 号变配电室 1 号柴发机房 ', budget: "4AA9-2"},
+                                        {name: '4AA9-3: 一二期消防安防控制室消防设备 (备用)', budget: "4AA9-3"},
+                                        {name: '4AA9-4: 备用 ', budget: "4AA9-4"},
+                                        {name: '4AA9-5: 备用 ', budget: "4AA9-5"},
+                                        {name: '4AA9-6: 备用 ', budget: "4AA9-6"},
+                                        {name: '4AA9-7: 备用 ', budget: "4AA9-7"},
+                                        {name: '4AA8-1: 消防稳压泵 ', budget: "4AA8-1"},
+                                        {name: '4AA8-2: 消防风机 1', budget: "4AA8-2"},
+                                        {name: '4AA8-3: 消防风机 2', budget: "4AA8-3"},
+                                        {name: '4AA8-4: 消防风机 3', budget: "4AA8-4"},
+                                        {name: '4AA8-5: 消防风机 4', budget: "4AA8-5"},
+                                        {name: '4AA8-6: 消防风机 5（备用）', budget: "4AA8-6"},
+                                        {name: '4AA8-7: 备用 ', budget: "4AA8-7"},
+                                        {name: '4AA8-8: 备用 ', budget: "4AA8-8"},
+                                        {name: '4AA7-1: 消防风机 6', budget: "4AA7-1"},
+                                        {name: '4AA7-2: 消防风机 7', budget: "4AA7-2"},
+                                        {name: '4AA7-3: 消防风机 8', budget: "4AA7-3"},
+                                        {name: '4AA7-4: 消防风机 9', budget: "4AA7-4"},
+                                        {name: '4AA7-5: 消防风机 10', budget: "4AA7-5"},
+                                        {name: '4AA7-6: 备用 ', budget: "4AA7-6"},
+                                        {name: '4AA6-1: 消防水泵房 ', budget: "4AA6-1"},
+                                        {name: '4AA6-2: 消防潜污泵 1', budget: "4AA6-2"},
+                                        {name: '4AA6-3: 消防潜污泵 2', budget: "4AA6-3"},
+                                        {name: '4AA6-4: 消防潜污泵 3', budget: "4AA6-4"},
+                                        {name: '4AA6-5: 消防潜污泵 4', budget: "4AA6-5"},
+                                        {name: '4AA6-6: 备用 ', budget: "4AA6-6"},
+                                        {name: '4AA5-1: 一期和二期网络机房 ', budget: "4AA5-1"},
+                                        {name: '4AA5-2: 一期和二期网络机房空调（备用）', budget: "4AA5-2"},
+                                        {name: '4AA5-3: 备用 ', budget: "4AA5-3"},
+                                        {name: '4AA5-4: 备用 ', budget: "4AA5-4"},
+                                        {name: '4AA5-5: 备用 ', budget: "4AA5-5"},
+                                        {name: '4AA4-1: 一期和二期消防安防控制室安防设备 ', budget: "4AA4-1"},
+                                        {name: '4AA4-2:AIIB 安防存储机房 ', budget: "4AA4-2"},
+                                        {name: '4AA4-3:AIIB 安防设备机房 ', budget: "4AA4-3"},
+                                        {name: '4AA4-4: 备用 ', budget: "4AA4-4"},
+                                        {name: '4AA4-5: 备用 ', budget: "4AA4-5"},
+                                        {name: '4AA3-1: 弱电 CA 用电 ', budget: "4AA3-1"},
+                                        {name: '4AA3-2: 弱电 SA 用电 ', budget: "4AA3-2"},
+                                        {name: '4AA3-3: 弱电 ELV 用电 ', budget: "4AA3-3"},
+                                        {name: '4AA3-4: 卫星接受机房和卫星通讯机房备用 ', budget: "4AA3-4"},
+                                        {name: '4AA3-5: 备用 ', budget: "4AA3-5"},
+                                        {name: '4AA3-6: 备用 ', budget: "4AA3-6"},
+                                        {name: '4AA2-1: 备用 ', budget: "4AA2-1"},
+                                        {name: '4AA2-2: 备用 ', budget: "4AA2-2"},
+                                        {name: '4AA2-3: 消防电梯 1', budget: "4AA2-3"},
+                                        {name: '4AA2-4: 消防电梯 2', budget: "4AA2-4"},
+                                        {name: '4AA2-5: 消防电梯 3', budget: "4AA2-5"},
+                                        {name: '4AA2-6: 消防电梯 4', budget: "4AA2-6"},
+                                        {name: '4AA1-1: 电动排烟窗 1（备用）', budget: "4AA1-1"},
+                                        {name: '4AA1-1: 电动排烟窗 2（备用）', budget: "4AA1-2"},
+                                        {name: '4AA1-1: 热交换站（备用）', budget: "4AA1-3"},
+                                        {name: '4AA1-1: 办公区电动窗等（备用）', budget: "4AA1-4"},
+                                        {name: '4AA1-1: 备用 ', budget: "4AA1-5"},
+                                        {name: '4AA1-1: 备用 ', budget: "4AA1-6"},
+                                        {name: '4AA1-14: 有源滤波柜 ', budget: "4AA14"}
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+    ];
+
+    const treeDataE2 = [
+        {
+            id: "2",
+            name: "东区2#配电室",
+            budget: "",
+            open: true,
+            children: [
+                {
+                    id: "2-1",
+                    name: "201:1#进线柜",
+                    budget: "",
+                    open: true,
+                    children: [
+                        {
+                            id: "2-1-1",
+                            name: "211:1#变压器",
+                            budget:"",
+                            children: [
+                                {
+                                    id: "2-1-1-1",
+                                    name: "401:2-1TM变压器进线",
+                                    budget:"2-1AA1-1",
+                                    children: [
+                                        {id: "2-1-1-1-3", name: '1AA6-1:16号核心强电井照明1',budget:"2-1AA6-1"},
+                                        {id: "2-1-1-1-4", name: '1AA6-2:备用',budget:"2-1AA6-2"},
+                                        {id: "2-1-1-1-5", name: '1AA6-3:备用',budget:"2-1AA6-3"},
+                                        {id: "2-1-1-1-6", name: '1AA6-4:备用',budget:"2-1AA6-4"},
+                                        {id: "2-1-1-1-7", name: '1AA7-1:15号核心强电井照明3',budget:"2-1AA7-1"},
+                                        {id: "2-1-1-1-8", name: '1AA7-2:备用',budget:"2-1AA7-2"},
+                                        {id: "2-1-1-1-9", name: '1AA7-3:备用',budget:"2-1AA7-3"},
+                                        {id: "2-1-1-1-10", name: '1AA8-1:12号核心强电井照明5',budget:"2-1AA8-1"},
+                                        {id: "2-1-1-1-11", name: '1AA8-2:备用',budget:"2-1AA8-2"},
+                                        {id: "2-1-1-1-12", name: '1AA8-3:备用',budget:"2-1AA8-3"},
+                                        {id: "2-1-1-1-13", name: '1AA9-1:照明7',budget:"2-1AA9-1"},
+                                        {id: "2-1-1-1-14", name: '1AA9-2:照明8',budget:"2-1AA9-2"},
+                                        {id: "2-1-1-1-15", name: '1AA9-3:多功能厅分区1',budget:"2-1AA9-3"},
+                                        {id: "2-1-1-1-16", name: '1AA9-4:多功能厅分区1',budget:"2-1AA9-4"},
+                                        {id: "2-1-1-1-17", name: '1AA9-5:备用',budget:"2-1AA9-5"},
+                                        {id: "2-1-1-1-18", name: '1AA9-6:备用',budget:"2-1AA9-6"},
+                                        {id: "2-1-1-1-19", name: '1AA9-7:备用',budget:"2-1AA9-7"},
+                                        {id: "2-1-1-1-20", name: '1AA10-1:备用',budget:"2-1AA10-1"},
+                                        {id: "2-1-1-1-21", name: '1AA10-2:景观照明预留1',budget:"2-1AA10-2"},
+                                        {id: "2-1-1-1-22", name: '1AA10-3:景观照明预留1',budget:"2-1AA10-3"},
+                                        {id: "2-1-1-1-23", name: '1AA10-4:备用',budget:"2-1AA10-4"},
+                                        {id: "2-1-1-1-24", name: '1AA10-5:擦窗机（备用）',budget:"2-1AA10-5"},
+                                        {id: "2-1-1-1-25", name: '1AA10-6:备用',budget:"2-1AA10-6"},
+                                        {id: "2-1-1-1-26", name: '1AA10-7:备用',budget:"2-1AA10-7"},
+                                        {id: "2-1-1-1-27", name: '1AA10-8:备用',budget:"2-1AA10-8"},
+                                        {id: "2-1-1-1-28", name: '1AA11-1:走道照明（备用）',budget:"2-1AA11-1"},
+                                        {id: "2-1-1-1-29", name: '1AA11-2:备用',budget:"2-1AA11-2"},
+                                        {id: "2-1-1-1-30", name: '1AA11-3:北侧首层安检用房',budget:"2-1AA11-3"},
+                                        {id: "2-1-1-1-31", name: '1AA11-4:备用',budget:"2-1AA11-4"},
+                                        {id: "2-1-1-1-32", name: '1AA11-5:备用',budget:"2-1AA11-5"},
+                                        {id: "2-1-1-1-33", name: '1AA11-6:（16号核心筒强电井）办公区重要负荷1',budget:"2-1AA11-6"},
+                                        {id: "2-1-1-1-34", name: '1AA11-7:（16号核心筒强电井）办公区重要负荷2',budget:"2-1AA11-7"},
+                                        {id: "2-1-1-1-35", name: '1AA11-8:备用',budget:"2-1AA11-8"},
+                                        {id: "2-1-1-1-36", name: '1AA12-1:（15号核心筒强电井）办公区重要负荷3',budget:"2-1AA12-1"},
+                                        {id: "2-1-1-1-37", name: '1AA12-2:（15号核心筒强电井）办公区重要负荷4',budget:"2-1AA12-2"},
+                                        {id: "2-1-1-1-38", name: '1AA12-3:（12号核心筒强电井）办公区重要负荷5',budget:"2-1AA12-3"},
+                                        {id: "2-1-1-1-39", name: '1AA12-4:（12号核心筒强电井）办公区重要负荷6',budget:"2-1AA12-4"},
+                                        {id: "2-1-1-1-40", name: '1AA12-5:备用',budget:"2-1AA12-5"},
+                                        {id: "2-1-1-1-41", name: '1AA12-6:备用',budget:"2-1AA12-6"},
+                                        {id: "2-1-1-1-42", name: '1AA12-7:备用',budget:"2-1AA12-7"},
+                                        {id: "2-1-1-1-43", name: '1AA13-1:报告厅同声传译室（备用）',budget:"2-1AA13-1"},
+                                        {id: "2-1-1-1-44", name: '1AA13-2:报告厅声控、光控室（备用）',budget:"2-1AA13-2"},
+                                        {id: "2-1-1-1-45", name: '1AA13-3:报告厅放映室',budget:"2-1AA13-3"},
+                                        {id: "2-1-1-1-46", name: '1AA13-4:报告厅',budget:"2-1AA13-4"},
+                                        {id: "2-1-1-1-47", name: '1AA13-5:备用',budget:"2-1AA13-5"},
+                                        {id: "2-1-1-1-48", name: '1AA13-6:备用',budget:"2-1AA13-6"},
+                                        {id: "2-1-1-1-49", name: '1AA13-7:备用',budget:"2-1AA13-7"},
+                                        {id: "2-1-1-1-50", name: '1AA13-8:备用',budget:"2-1AA13-8"},
+                                        {id: "2-1-1-1-51", name: '1AA13-9:备用',budget:"2-1AA13-9"},
+                                        {id: "2-1-1-1-52", name: '1AA14-1:备用',budget:"2-1AA14-1"},
+                                        {id: "2-1-1-1-53", name: '1AA14-2:12号核心筒北侧客梯4（备用）',budget:"2-1AA14-2"},
+                                        {id: "2-1-1-1-54", name: '1AA14-3:潜污泵（备用）',budget:"2-1AA14-3"},
+                                        {id: "2-1-1-1-55", name: '1AA14-4:厨房冷库（备用）',budget:"2-1AA14-4"},
+                                        {id: "2-1-1-1-56", name: '1AA14-5:备用',budget:"2-1AA14-5"},
+                                        {id: "2-1-1-1-57", name: '1AA14-6:备用',budget:"2-1AA14-6"},
+                                        {id: "2-1-1-1-58", name: '1AA15-1:16号核心筒客梯1（备用）',budget:"2-1AA15-1"},
+                                        {id: "2-1-1-1-59", name: '1AA15-2:16号核心筒客梯2（备用）',budget:"2-1AA15-2"},
+                                        {id: "2-1-1-1-60", name: '1AA15-3:16号核心筒客梯3（备用）',budget:"2-1AA15-3"},
+                                        {id: "2-1-1-1-61", name: '1AA15-4:备用',budget:"2-1AA15-4"},
+                                        {id: "2-1-1-1-62", name: '1AA15-5:备用',budget:"2-1AA15-5"},
+                                        // {id: "2-1-1-1-63", name: '1AA5:有源滤波柜',budget:"1AA5"},
+                                    ]
+                                },
+                            ]
+                        },
+                        {
+                            id: "2-1-2",
+                            name: "212:3#变压器",
+                            budget:"",
+                            children: [
+                                {
+                                    id: "2-1-2-1",
+                                    name: "403:2-3TM变压器进线",
+                                    budget:"2-3AA1-1",
+                                    children: [
+                                        {id: "2-1-2-1-3", name: '3AA6-1:充电桩1',budget:"2-3AA6-1"},
+                                        {id: "2-1-2-1-4", name: '3AA6-2:充电桩2',budget:"2-3AA6-2"},
+                                        {id: "2-1-2-1-5", name: '3AA6-3:充电桩3',budget:"2-3AA6-3"},
+                                        {id: "2-1-2-1-6", name: '3AA6-4:充电桩4',budget:"2-3AA6-4"},
+                                        {id: "2-1-2-1-7", name: '3AA6-5:备用',budget:"2-3AA6-5"},
+                                        {id: "2-1-2-1-8", name: '3AA7-1:二层厨房',budget:"2-3AA7-1"},
+                                        {id: "2-1-2-1-9", name: '3AA7-2:空调设备7',budget:"2-3AA7-2"},
+                                        {id: "2-1-2-1-10", name: '3AA7-3:空调设备8',budget:"2-3AA7-3"},
+                                        {id: "2-1-2-1-11", name: '3AA7-4:空调设备12',budget:"2-3AA7-4"},
+                                        {id: "2-1-2-1-12", name: '3AA7-5:备用',budget:"2-3AA7-5"},
+                                        {id: "2-1-2-1-13", name: '3AA7-6:备用',budget:"2-3AA7-6"},
+                                        {id: "2-1-2-1-14", name: '3AA8-1:空调设备9',budget:"2-3AA8-1"},
+                                        {id: "2-1-2-1-15", name: '3AA8-2:空调设备10',budget:"2-3AA8-2"},
+                                        {id: "2-1-2-1-16", name: '3AA8-3:空调设备11',budget:"2-3AA8-3"},
+                                        {id: "2-1-2-1-17", name: '3AA8-4:首层多功能厅餐饮区',budget:"2-3AA8-4"},
+                                        {id: "2-1-2-1-18", name: '3AA8-5:备用',budget:"2-3AA8-5"},
+                                        {id: "2-1-2-1-19", name: '3AA9-1:12号/15号/16号核心筒应急照明（备用）',budget:"2-3AA9-1"},
+                                        {id: "2-1-2-1-20", name: '3AA9-2:2#总配电室3号柴发机房（备用）',budget:"2-3AA9-2"},
+                                        {id: "2-1-2-1-21", name: '3AA9-3:备用',budget:"2-3AA9-3"},
+                                        {id: "2-1-2-1-22", name: '3AA9-4:备用',budget:"2-3AA9-4"},
+                                        {id: "2-1-2-1-23", name: '3AA9-5:备用',budget:"2-3AA9-5"},
+                                        {id: "2-1-2-1-24", name: '3AA9-6:消防风机12（备用）',budget:"2-3AA9-6"},
+                                        {id: "2-1-2-1-25", name: '3AA10-1:消防风机1（备用）',budget:"2-3AA10-1"},
+                                        {id: "2-1-2-1-26", name: '3AA10-2:消防风机2（备用）',budget:"2-3AA10-2"},
+                                        {id: "2-1-2-1-27", name: '3AA10-3:消防风机3（备用）',budget:"2-3AA10-3"},
+                                        {id: "2-1-2-1-28", name: '3AA10-4:消防风机4（备用）',budget:"2-3AA10-4"},
+                                        {id: "2-1-2-1-29", name: '3AA10-5:消防风机5（备用）',budget:"2-3AA10-5"},
+                                        {id: "2-1-2-1-30", name: '3AA10-6:消防风机6（备用）',budget:"2-3AA10-6"},
+                                        {id: "2-1-2-1-31", name: '3AA10-7:消防风机11（备用）',budget:"2-3AA10-7"},
+                                        {id: "2-1-2-1-32", name: '3AA10-8:备用',budget:"2-3AA10-8"},
+                                        {id: "2-1-2-1-33", name: '3AA10-9:备用',budget:"2-3AA10-9"},
+                                        {id: "2-1-2-1-34", name: '3AA11-1:消防风机7（备用）',budget:"2-3AA11-1"},
+                                        {id: "2-1-2-1-35", name: '3AA11-2:消防风机8（备用）',budget:"2-3AA11-2"},
+                                        {id: "2-1-2-1-36", name: '3AA11-3:消防风机9（备用）',budget:"2-3AA11-3"},
+                                        {id: "2-1-2-1-37", name: '3AA11-4:消防风机10（备用）',budget:"2-3AA11-4"},
+                                        {id: "2-1-2-1-38", name: '3AA11-5:消防风机13（备用）',budget:"2-3AA11-5"},
+                                        {id: "2-1-2-1-39", name: '3AA11-6:备用',budget:"2-3AA11-6"},
+                                        {id: "2-1-2-1-40", name: '3AA11-7:备用',budget:"2-3AA11-7"},
+                                        {id: "2-1-2-1-41", name: '3AA12-1:弱电CA用电（备用）',budget:"2-3AA12-1"},
+                                        {id: "2-1-2-1-42", name: '3AA12-2:弱电SA用电（备用）',budget:"2-3AA12-2"},
+                                        {id: "2-1-2-1-43", name: '3AA12-3:弱电ELV用电（备用）',budget:"2-3AA12-3"},
+                                        {id: "2-1-2-1-44", name: '3AA12-4:防冲撞系统用电（备用）',budget:"2-3AA12-4"},
+                                        {id: "2-1-2-1-45", name: '3AA12-5:备用',budget:"2-3AA12-5"},
+                                        {id: "2-1-2-1-46", name: '3AA12-6:备用',budget:"2-3AA12-6"},
+                                        {id: "2-1-2-1-47", name: '3AA13-1:备用',budget:"2-3AA13-1"},
+                                        {id: "2-1-2-1-48", name: '3AA13-2:中厅电动窗1',budget:"2-3AA13-2"},
+                                        {id: "2-1-2-1-49", name: '3AA13-3:中厅电动窗2',budget:"2-3AA13-3"},
+                                        {id: "2-1-2-1-50", name: '3AA13-4:办公区电动窗等',budget:"2-3AA13-4"},
+                                        {id: "2-1-2-1-51", name: '3AA13-5:消防潜污泵1（备用）',budget:"2-3AA13-5"},
+                                        {id: "2-1-2-1-52", name: '3AA13-6:备用',budget:"2-3AA13-6"},
+                                        {id: "2-1-2-1-53", name: '3AA13-7:备用',budget:"2-3AA13-7"},
+                                        {id: "2-1-2-1-54", name: '3AA13-8:备用',budget:"2-3AA13-8"},
+                                        {id: "2-1-2-1-55", name: '3AA14-1:消防潜污泵2（备用）',budget:"2-3AA14-1"},
+                                        {id: "2-1-2-1-56", name: '3AA14-2:消防潜污泵3（备用）',budget:"2-3AA14-2"},
+                                        {id: "2-1-2-1-57", name: '3AA14-3:消防电梯1（备用）',budget:"2-3AA14-3"},
+                                        {id: "2-1-2-1-58", name: '3AA14-4:消防电梯2（备用）',budget:"2-3AA14-4"},
+                                        {id: "2-1-2-1-59", name: '3AA14-5:消防电梯3（备用）',budget:"2-3AA14-5"},
+                                        {id: "2-1-2-1-60", name: '3AA14-6:备用',budget:"2-3AA14-6"},
+                                        {id: "2-1-2-1-61", name: '3AA14-7:备用',budget:"2-3AA14-7"},
+                                        // {id: "2-1-2-1-62", name: '3AA5:有源滤波柜',budget:"3AA5"},
+                                    ]
+                                },
+                            ]}
+                    ]
+                },
+                {
+                    id: "2-3",
+                    name: "202:2#进线柜",
+                    budget:"",
+                    open: true,
+                    children: [
+                        {
+                            id: "2-3-3",
+                            name: "222:4#变压器",
+                            budget:"",
+                            children: [
+                                {
+                                    id: "2-3-3-1",
+                                    name: "404:2-4TM变压器进线",
+                                    budget:"2-4AA14-1",
+                                    children: [
+                                        {id: "2-3-3-1-3", name: '4AA10-1:空调设备1',budget:"2-4AA10-1"},
+                                        {id: "2-3-3-1-4", name: '4AA10-2:空调设备2',budget:"2-4AA10-2"},
+                                        {id: "2-3-3-1-5", name: '4AA10-3:空调设备3',budget:"2-4AA10-3"},
+                                        {id: "2-3-3-1-6", name: '4AA10-4:唯美便利店/茶室',budget:"2-4AA10-4"},
+                                        {id: "2-3-3-1-7", name: '4AA10-5:备用',budget:"2-4AA10-5"},
+                                        {id: "2-3-3-1-8", name: '4AA9-1:空调设备4',budget:"2-4AA9-1"},
+                                        {id: "2-3-3-1-9", name: '4AA9-2:空调设备5',budget:"2-4AA9-2"},
+                                        {id: "2-3-3-1-10", name: '4AA9-3:空调设备6',budget:"2-4AA9-3"},
+                                        {id: "2-3-3-1-11", name: '4AA9-4:备用',budget:"2-4AA9-4"},
+                                        {id: "2-3-3-1-12", name: '4AA9-5:备用',budget:"2-4AA9-5"},
+                                        {id: "2-3-3-1-13", name: '4AA9-6:备用',budget:"2-4AA9-6"},
+                                        {id: "2-3-3-1-14", name: '4AA8-1:地下一层厨房4',budget:"2-4AA8-1"},
+                                        {id: "2-3-3-1-15", name: '4AA8-2:地下一层厨房4',budget:"2-4AA8-2"},
+                                        {id: "2-3-3-1-16", name: '4AA8-3:厨房排油烟4',budget:"2-4AA8-3"},
+                                        {id: "2-3-3-1-17", name: '4AA8-4:备用',budget:"2-4AA8-4"},
+                                        {id: "2-3-3-1-18", name: '4AA8-5:备用',budget:"2-4AA8-5"},
+                                        {id: "2-3-3-1-19", name: '4AA7-1:市电/应急电源转换',budget:"2-4AA7-1"},
+                                        {id: "2-3-3-1-20", name: '4AA6-1:12号/15号/16号核心筒应急照明',budget:"2-4AA6-1"},
+                                        {id: "2-3-3-1-21", name: '4AA6-2:2号分界室2#总配电室3号柴发机房',budget:"2-4AA6-2"},
+                                        {id: "2-3-3-1-22", name: '4AA6-3:备用',budget:"2-4AA6-3"},
+                                        {id: "2-3-3-1-23", name: '4AA6-4:备用',budget:"2-4AA6-4"},
+                                        {id: "2-3-3-1-24", name: '4AA6-5:备用',budget:"2-4AA6-5"},
+                                        {id: "2-3-3-1-25", name: '4AA6-6:消防风机12',budget:"2-4AA6-6"},
+                                        {id: "2-3-3-1-26", name: '4AA5-1:消防风机1',budget:"2-4AA5-1"},
+                                        {id: "2-3-3-1-27", name: '4AA5-2:消防风机2',budget:"2-4AA5-2"},
+                                        {id: "2-3-3-1-28", name: '4AA5-3:消防风机3',budget:"2-4AA5-3"},
+                                        {id: "2-3-3-1-29", name: '4AA5-4:消防风机4',budget:"2-4AA5-4"},
+                                        {id: "2-3-3-1-30", name: '4AA5-5:备用',budget:"2-4AA5-5"},
+                                        {id: "2-3-3-1-31", name: '4AA5-6:备用',budget:"2-4AA5-6"},
+                                        {id: "2-3-3-1-32", name: '4AA5-7:消防风机11',budget:"2-4AA5-7"},
+                                        {id: "2-3-3-1-33", name: '4AA5-8:备用',budget:"2-4AA5-8"},
+                                        {id: "2-3-3-1-34", name: '4AA5-9:备用',budget:"2-4AA5-9"},
+                                        {id: "2-3-3-1-35", name: '4AA4-1:备用',budget:"2-4AA4-1"},
+                                        {id: "2-3-3-1-36", name: '4AA4-2:备用',budget:"2-4AA4-2"},
+                                        {id: "2-3-3-1-37", name: '4AA4-3:消防风机9',budget:"2-4AA4-3"},
+                                        {id: "2-3-3-1-38", name: '4AA4-4:消防风机10',budget:"2-4AA4-4"},
+                                        {id: "2-3-3-1-39", name: '4AA4-5:消防风机13',budget:"2-4AA4-5"},
+                                        {id: "2-3-3-1-40", name: '4AA4-6:备用',budget:"2-4AA4-6"},
+                                        {id: "2-3-3-1-41", name: '4AA4-7:备用',budget:"2-4AA4-7"},
+                                        {id: "2-3-3-1-42", name: '4AA3-1:弱电CA用电',budget:"2-4AA3-1"},
+                                        {id: "2-3-3-1-43", name: '4AA3-2:弱电SA用电',budget:"2-4AA3-2"},
+                                        {id: "2-3-3-1-44", name: '4AA3-3:弱电ELV用电',budget:"2-4AA3-3"},
+                                        {id: "2-3-3-1-45", name: '4AA3-4:防冲撞系统用电',budget:"2-4AA3-4"},
+                                        {id: "2-3-3-1-46", name: '4AA3-5:备用',budget:"2-4AA3-5"},
+                                        {id: "2-3-3-1-47", name: '4AA3-6:备用',budget:"2-4AA3-6"},
+                                        {id: "2-3-3-1-48", name: '4AA2-1:备用',budget:"2-4AA2-1"},
+                                        {id: "2-3-3-1-49", name: '4AA2-2:消防风机1',budget:"2-4AA2-2"},
+                                        {id: "2-3-3-1-50", name: '4AA2-3:消防风机5',budget:"2-4AA2-3"},
+                                        {id: "2-3-3-1-51", name: '4AA2-4:消防风机6',budget:"2-4AA2-4"},
+                                        {id: "2-3-3-1-52", name: '4AA2-5:消防风机7',budget:"2-4AA2-5"},
+                                        {id: "2-3-3-1-53", name: '4AA2-6:消防风机8',budget:"2-4AA2-6"},
+                                        {id: "2-3-3-1-54", name: '4AA2-7:中厅电动窗1（备用）',budget:"2-4AA2-7"},
+                                        {id: "2-3-3-1-55", name: '4AA2-8:中厅电动窗2（备用）',budget:"2-4AA2-8"},
+                                        {id: "2-3-3-1-56", name: '4AA1-1:消防潜污泵2',budget:"2-4AA1-1"},
+                                        {id: "2-3-3-1-57", name: '4AA1-2:消防潜污泵3',budget:"2-4AA1-2"},
+                                        {id: "2-3-3-1-58", name: '4AA1-3:消防电梯1',budget:"2-4AA1-3"},
+                                        {id: "2-3-3-1-59", name: '4AA1-4:消防电梯2',budget:"2-4AA1-4"},
+                                        {id: "2-3-3-1-60", name: '4AA1-5:消防电梯3',budget:"2-4AA1-5"},
+                                        {id: "2-3-3-1-61", name: '4AA1-6:办公区电动窗等（备用）',budget:"2-4AA1-6"},
+                                        {id: "2-3-3-1-62", name: '4AA1-7:消防潜污泵1',budget:"2-4AA1-7"},
+                                        {id: "2-3-3-1-63", name: '4AA1-8:备用',budget:"2-4AA1-8"},
+                                        // {id: "2-3-3-1-64", name: '4AA11-1:有源滤波柜',budget:"4AA11-1"},
+                                    ]
+                                },
+                            ]
+                        },
+                        {
+                            id: "2-3-4",
+                            name: "221:2#变压器",
+                            budget:"",
+                            children: [
+                                {
+                                    id: "2-3-4-1",
+                                    name: "402:2-2TM变压器进线",
+                                    budget:"2-2AA14-1",
+                                    children: [
+                                        {id: "2-3-4-1-3", name: '2AA10-1:16号核心筒强电井照明2',budget:"2-2AA10-1"},
+                                        {id: "2-3-4-1-4", name: '2AA10-2:备用',budget:"2-2AA10-2"},
+                                        {id: "2-3-4-1-5", name: '2AA10-3:备用',budget:"2-2AA10-3"},
+                                        {id: "2-3-4-1-6", name: '2AA10-4:备用',budget:"2-2AA10-4"},
+                                        {id: "2-3-4-1-7", name: '2AA9-1:（15号核心筒强电井）照明4',budget:"2-2AA9-1"},
+                                        {id: "2-3-4-1-8", name: '2AA9-2:备用',budget:"2-2AA9-2"},
+                                        {id: "2-3-4-1-9", name: '2AA9-3:备用',budget:"2-2AA9-3"},
+                                        {id: "2-3-4-1-10", name: '2AA8-1:（12号核心筒强电井）照明6',budget:"2-2AA8-1"},
+                                        {id: "2-3-4-1-11", name: '2AA8-2:备用',budget:"2-2AA8-2"},
+                                        {id: "2-3-4-1-12", name: '2AA8-3:备用',budget:"2-2AA8-3"},
+                                        {id: "2-3-4-1-13", name: '2AA7-1:多功能厅舞台照明预留',budget:"2-2AA7-1"},
+                                        {id: "2-3-4-1-14", name: '2AA7-2:多功能厅辅助用房',budget:"2-2AA7-2"},
+                                        {id: "2-3-4-1-15", name: '2AA7-3:擦窗机',budget:"2-2AA7-3"},
+                                        {id: "2-3-4-1-16", name: '2AA7-4:多功能厅分区1（备用）',budget:"2-2AA7-4"},
+                                        {id: "2-3-4-1-17", name: '2AA7-5:多功能厅分区2（备用）',budget:"2-2AA7-5"},
+                                        {id: "2-3-4-1-18", name: '2AA7-6:备用',budget:"2-2AA7-6"},
+                                        {id: "2-3-4-1-19", name: '2AA7-7:备用',budget:"2-2AA7-7"},
+                                        {id: "2-3-4-1-20", name: '2AA7-8:备用',budget:"2-2AA7-8"},
+                                        {id: "2-3-4-1-21", name: '2AA6-1:十点/应急电源转换',budget:"2-2AA6-1"},
+                                        {id: "2-3-4-1-22", name: '2AA5-1:走道照明',budget:"2-2AA5-1"},
+                                        {id: "2-3-4-1-23", name: '2AA5-2:备用',budget:"2-2AA5-2"},
+                                        {id: "2-3-4-1-24", name: '2AA5-3:首层安检用房（备用）',budget:"2-2AA5-3"},
+                                        {id: "2-3-4-1-25", name: '2AA5-4:备用',budget:"2-2AA5-4"},
+                                        {id: "2-3-4-1-26", name: '2AA5-5:备用',budget:"2-2AA5-5"},
+                                        {id: "2-3-4-1-27", name: '2AA5-6:（16号核心筒强电井）办公区重要负荷1（备用）',budget:"2-2AA5-6"},
+                                        {id: "2-3-4-1-28", name: '2AA5-7:（16号核心筒强电井）办公区重要负荷2（备用）',budget:"2-2AA5-7"},
+                                        {id: "2-3-4-1-29", name: '2AA5-8:备用',budget:"2-2AA5-8"},
+                                        {id: "2-3-4-1-30", name: '2AA4-1:（15号核心筒强电井）办公区重要负荷3（备用）',budget:"2-2AA4-1"},
+                                        {id: "2-3-4-1-31", name: '2AA4-2:（15号核心筒强电井）办公区重要负荷4（备用）',budget:"2-2AA4-2"},
+                                        {id: "2-3-4-1-32", name: '2AA4-3:（15号核心筒强电井）办公区重要负荷5（备用）',budget:"2-2AA4-3"},
+                                        {id: "2-3-4-1-33", name: '2AA4-4:（15号核心筒强电井）办公区重要负荷6（备用）',budget:"2-2AA4-4"},
+                                        {id: "2-3-4-1-34", name: '2AA4-5:备用',budget:"2-2AA4-5"},
+                                        {id: "2-3-4-1-35", name: '2AA4-6:备用',budget:"2-2AA4-6"},
+                                        {id: "2-3-4-1-36", name: '2AA4-7:备用',budget:"2-2AA4-7"},
+                                        {id: "2-3-4-1-37", name: '2AA3-1:报告厅同声传译室',budget:"2-2AA3-1"},
+                                        {id: "2-3-4-1-38", name: '2AA3-2:报告厅声控、光控室（备用）',budget:"2-2AA3-2"},
+                                        {id: "2-3-4-1-39", name: '2AA3-3:报告厅放映室（备用）',budget:"2-2AA3-3"},
+                                        {id: "2-3-4-1-40", name: '2AA3-4:报告厅（备用）',budget:"2-2AA3-4"},
+                                        {id: "2-3-4-1-41", name: '2AA3-5:备用',budget:"2-2AA3-5"},
+                                        {id: "2-3-4-1-42", name: '2AA3-6:备用',budget:"2-2AA3-6"},
+                                        {id: "2-3-4-1-43", name: '2AA3-7:备用',budget:"2-2AA3-7"},
+                                        {id: "2-3-4-1-44", name: '2AA3-8:备用',budget:"2-2AA3-8"},
+                                        {id: "2-3-4-1-45", name: '2AA3-9:备用',budget:"2-2AA3-9"},
+                                        {id: "2-3-4-1-46", name: '2AA2-1:备用',budget:"2-2AA2-1"},
+                                        {id: "2-3-4-1-47", name: '2AA2-2:12号核心筒北侧客梯4',budget:"2-2AA2-2"},
+                                        {id: "2-3-4-1-48", name: '2AA2-3:潜污泵',budget:"2-2AA2-3"},
+                                        {id: "2-3-4-1-49", name: '2AA2-4:厨房冷库',budget:"2-2AA2-4"},
+                                        {id: "2-3-4-1-50", name: '2AA2-5:备用',budget:"2-2AA2-5"},
+                                        {id: "2-3-4-1-51", name: '2AA2-6:备用',budget:"2-2AA2-6"},
+                                        {id: "2-3-4-1-52", name: '2AA1-1:16号核心筒侧客梯1',budget:"2-2AA1-1"},
+                                        {id: "2-3-4-1-53", name: '2AA1-2:16号核心筒侧客梯2',budget:"2-2AA1-2"},
+                                        {id: "2-3-4-1-54", name: '2AA1-3:16号核心筒侧客梯3',budget:"2-2AA1-3"},
+                                        {id: "2-3-4-1-55", name: '2AA1-4:备用',budget:"2-2AA1-4"},
+                                        {id: "2-3-4-1-56", name: '2AA1-5:备用',budget:"2-2AA1-5"}
+                                        // {id: "2-3-4-1-57", name: '2AA11-1:有源滤波柜',budget:"2AA11-1"},
+                                    ]
+                                },
+                            ]
+                        },
+                    ]
+                }
+            ]
+        }
+    ];
+
+    const treeDataE6 =[
+        {
+            id: "3",
+            name: "东区6#配电室",
+            budget: "",
+            open: true,
+            children: [
+                {
+                    id: "3-1",
+                    name: "211:1#变压器",
+                    budget:"",
+                    children: [
+                        {
+                            id: "3-1-1",
+                            name: "401:6-1TM变压器进线",
+                            budget:"6-1AA1-1",
+                            children: [
+                                {id: "3-1-1-3", name: '1AA6-1:一二期双工况变频离心机组1', budget:"6-1AA6-1"},
+                                {id: "3-1-1-4", name: '1AA7-1:一二期变频离心式冷水机组1', budget:"6-1AA7-1"},
+                                {id: "3-1-1-5", name: '1AA8-1:空调设备1', budget:"6-1AA8-1"},
+                                {id: "3-1-1-6", name: '1AA8-2:空调设备2', budget:"6-1AA8-2"},
+                                {id: "3-1-1-7", name: '1AA8-3:备用', budget:"6-1AA8-3"},
+                                {id: "3-1-1-8", name: '1AA8-4:备用', budget:"6-1AA8-4"},
+                                {id: "3-1-1-9", name: '1AA8-5:备用', budget:"6-1AA8-5"},
+                                {id: "3-1-1-10", name: '1AA9-1:一二期制冷机房控制室配电柜', budget:"6-1AA9-1"},
+                                {id: "3-1-1-11", name: '1AA10-1:一、二期网络及用户冷却水水泵房控制室配电柜', budget:"6-1AA10-1"},
+                                {id: "3-1-1-12", name: '1AA10-2:却水水泵房控制室配电柜（备用）', budget:"6-1AA10-2"},
+                                {id: "3-1-1-13", name: '1AA10-3:备用', budget:"6-1AA10-3"},
+                                {id: "3-1-1-14", name: '1AA10-4:6#分配电室', budget:"6-1AA10-4"},
+                                {id: "3-1-1-15", name: '1AA10-5:备用', budget:"6-1AA10-5"},
+                                // {id: "3-1-1-16", name: '1AA5-1:有源滤波柜', budget:"1AA5-1"}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "3-6",
+                    name: "221:2#变压器",
+                    budget:"",
+                    children: [
+                        {
+                            id: "3-6-1",
+                            name: "402:6-2TM变压器进线",
+                            budget:"6-2AA11-1",
+                            children: [
+                                {id: "3-6-1-3", name: '2AA7-1:一二期双工况变频离心机组2', budget:"6-2AA7-1"},
+                                {id: "3-6-1-4", name: '2AA6-1:一二期变频离心式冷水机组2', budget:"6-2AA6-1"},
+                                {id: "3-6-1-5", name: '2AA5-1:一二期制冷机房控制室', budget:"6-2AA5-1"},
+                                {id: "3-6-1-6", name: '2AA4-1:一二期冷却塔配电柜', budget:"6-2AA4-1"},
+                                {id: "3-6-1-7", name: '2AA4-2:备用', budget:"6-2AA4-2"},
+                                {id: "3-6-1-8", name: '2AA4-3:备用', budget:"6-2AA4-3"},
+                                {id: "3-6-1-9", name: '2AA4-4:备用', budget:"6-2AA4-4"},
+                                {id: "3-6-1-10", name: '2AA4-5:冷却塔电加热柜', budget:"6-2AA4-5"},
+                                {id: "3-6-1-11", name: '2AA3-1:备用', budget:"6-2AA3-1"},
+                                {id: "3-6-1-12", name: '2AA3-2:备用', budget:"6-2AA3-2"},
+                                {id: "3-6-1-13", name: '2AA3-3:备用', budget:"6-2AA3-3"},
+                                {id: "3-6-1-14", name: '2AA3-4:备用', budget:"6-2AA3-4"},
+                                {id: "3-6-1-15", name: '2AA3-5:备用', budget:"6-2AA3-5"},
+                                {id: "3-6-1-16", name: '2AA2-1:市电/备用电源转换', budget:"6-2AA2-1"},
+                                {id: "3-6-1-17", name: '2AA1-1:一、二期网络及用户冷却水水泵房控制室配电柜1（备用）', budget:"6-2AA1-1"},
+                                {id: "3-6-1-18", name: '2AA1-2:一、二期网络及用户冷却水水泵房控制室配电柜1（备用）', budget:"6-2AA1-2"},
+                                {id: "3-6-1-19", name: '2AA1-3:备用', budget:"6-2AA1-3"},
+                                {id: "3-6-1-20", name: '2AA1-4:6#分配电室', budget:"6-2AA1-4"},
+                                {id: "3-6-1-21", name: '2AA1-5:备用', budget:"6-2AA1-5"},
+                                {id: "3-6-1-22", name: '2AA8-1:有源滤波柜', budget:"6-2AA8-1"}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    function getTreeDataByPds(pdsValue) {
+        if (pdsValue === 'W1#') return treeDataW1;
+        if (pdsValue === 'E2#') return treeDataE2;
+        if (pdsValue === 'E6#') return treeDataE6;
+        return [...treeDataW1, ...treeDataE2, ...treeDataE6];
+    }
+
+    function getDefaultCmsByPds(pdsValue) {
+        if (pdsValue === 'W1#') {
+            return ["1AA1-1", "2AA15-1", "3AA1-1", "4AA17-1"];
+        }
+        if (pdsValue === 'E2#') {
+            return ["2-1AA1-1", "2-2AA14-1", "2-3AA1-1", "2-4AA14-1"];
+        }
+        if (pdsValue === 'E6#') {
+            return ["6-1AA1-1", "6-2AA11-1"];
+        }
+        return [
+            "1AA1-1", "2AA15-1", "3AA1-1", "4AA17-1",
+            "2-1AA1-1", "2-2AA14-1", "2-3AA1-1", "2-4AA14-1",
+            "6-1AA1-1", "6-2AA11-1"
+        ];
+    }
+
+    function renderCurrentTree() {
+        const pdsValue = document.getElementById('xlsx').value;
+        const treeRoot = document.getElementById('treeRoot');
+        treeRoot.innerHTML = renderTree(getTreeDataByPds(pdsValue));
+        bindTreeEvents();
+    }
+
+    // 渲染树形菜单（去除了子项数量徽章）
+    function renderTree(data) {
+        let html = '<ul class="layui-tree">';
+
+        data.forEach(node => {
+            html += `
+                <li class="tree-node ${node.open ? 'open' : ''}">
+                    <div class="node-content">
+                        <input type="checkbox" class="node-checkbox" data-id="${node.id}"
+                               data-node='${JSON.stringify(node)}'>
+                        <i class="layui-icon node-icon">${node.children ? '&#xe623;' : '&#xe60a;'}</i>
+                        <div class="node-info">
+                            <div class="node-title" title="${node.name}">${node.name}</div>
+                        </div>
+                    </div>
+                `;
+
+            if (node.children && node.children.length > 0) {
+                html += '<div class="tree-children">';
+                html += renderTree(node.children);
+                html += '</div>';
+            }
+
+            html += '</li>';
+        });
+
+        html += '</ul>';
+        return html;
+    }
+
+    function bindTreeEvents() {
+        document.querySelectorAll('.node-icon').forEach(icon => {
+            icon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const parentNode = this.closest('.tree-node');
+                const children = parentNode.querySelector('.tree-children');
+                if (children) {
+                    parentNode.classList.toggle('open');
+                    this.innerHTML = parentNode.classList.contains('open') ? '&#xe625;' : '&#xe623;';
+                }
+            });
+        });
+
+        document.querySelectorAll('.node-title').forEach(title => {
+            title.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const parentNode = this.closest('.tree-node');
+                const icon = parentNode.querySelector('.node-icon');
+                const children = parentNode.querySelector('.tree-children');
+                if (children) {
+                    parentNode.classList.toggle('open');
+                    icon.innerHTML = parentNode.classList.contains('open') ? '&#xe625;' : '&#xe623;';
+                }
+            });
+        });
+    }
+
+    document.getElementById('xlsx').addEventListener('change', function () {
+        document.getElementById('clwz').value = '总计';
+        renderCurrentTree();
+    });
+
+    // 初始化树形菜单
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCurrentTree();
+
+        // bindTreeEvents();
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentMonthValue = `${currentYear}-${currentMonth}`;
+        //页面开始时触发一次查询
+        const initPdsValue = document.getElementById('xlsx').value;
+
+        $.ajax({
+            url: '/hdb/getdltjcx',
+            method: 'POST',
+            data: {
+                cmsname: getDefaultCmsByPds(initPdsValue),
+                nyr: "month",
+                datatest: currentMonthValue
+            },
+            success: function (date) {
+                dfFenLichaxun(date);
+            }
+        });
+
+        // 查看选中项详情（使用弹出层展示完整信息）
+        document.getElementById('DFchaxun').addEventListener('click', function() {
+            const selectedNodes = [];
+            document.querySelectorAll('.node-checkbox:checked').forEach(checkbox => {
+                selectedNodes.push(JSON.parse(checkbox.dataset.node));
+            });
+
+            const pdsValue = document.getElementById('xlsx').value;
+            let cmsname = [];
+            let cmsnames = [];
+
+            if (selectedNodes.length === 0) {
+                cmsname = getDefaultCmsByPds(pdsValue);
+                cmsnames = ['总计'];
+            }
+            else {
+                selectedNodes.forEach((node) => {
+                    const budget = (node.budget || '').trim();
+                    if (budget) {
+                        cmsname.push(budget);
+                        cmsnames.push(node.name);
+                    }
+                });
+                if (cmsname.length === 0) {
+                    cmsname = getDefaultCmsByPds(pdsValue);
+                    cmsnames = ['总计'];
+                }
+
+            }
+            //获取选中节点信息（多个）
+            //获取年月日信息
+            var nyr =localStorage.getItem('myCachedValue'); //year month day
+            //获取具体时间信息
+            var datatest = document.getElementById('test1').value; //2025-01
+            //["1AA1-1","2AA15-1","3AA1-1","4AA17-1"]
+
+            //发送信息到后端接口
+            $.ajax({
+                url: '/hdb/getdltjcx',
+                method: 'POST',
+                data: {
+                    cmsname: cmsname,
+                    nyr:nyr,
+                    datatest:datatest
+                },
+                success: function (date) {
+                    dfFenLichaxun(date);
+                    document.getElementById('bt_h2').textContent =cmsnames.join(",")+"-电量统计分析（"+datatest +"）";
+                }
+            });
+        });
+    });
+
+
+    function dfFenLichaxun(date){
+
+        var datatest = document.getElementById('test1').value; //2025-01
+        //返回数据： 字段数据， 有功数据，电费数据
+        xAxisData  =date.list1;
+        yAxisData1 =date.list2;
+        yAxisData2 =date.list3;
+        console.log(date)
+        peizhix(xAxisData,yAxisData1,yAxisData2,datatest);
+
+        var BingTu1 =[
+            { value: date.list4[2] || 0, name: '平' },
+            { value: date.list4[3] || 0, name: '谷' },
+            { value: date.list4[0] || 0, name: '尖' },
+            { value: date.list4[1] || 0, name: '峰' }
+        ];
+        var BingTu2 =[
+            { value: date.list5[2] || 0, name: '平段电费' },
+            { value: date.list5[3] || 0, name: '谷段电费' },
+            { value: date.list5[0] || 0, name: '尖段电费' },
+            { value: date.list5[1] || 0, name: '峰段电费' }
+        ]
+        //调用饼图方法
+        BingT(BingTu1,BingTu2);
+        //电费电量计算
+        const zdl =date.list4
+            .map(Number)
+            .reduce((total, num) => total + num, 0)
+            .toFixed(2);
+        document.getElementById('ygfb').textContent ="(总电量 : "+zdl +" kWh)";
+
+
+        const zdf =date.list5
+            .map(Number)
+            .reduce((total, num) => total + num, 0)
+            .toFixed(2);
+        document.getElementById('dffb').textContent ="(总电费 : "+zdf +" 元)";
+        // document.getElementById('bt_h2').textContent =cmsnames.join(",")+"-电量统计分析（"+datatest +"）";
+    }
+    window.addEventListener('resize', function () {
+        if (barChartInstance) barChartInstance.resize();
+        if (pieChartYgInstance) pieChartYgInstance.resize();
+        if (pieChartDfInstance) pieChartDfInstance.resize();
+    });
+
+</script>
+</body>
+</html>

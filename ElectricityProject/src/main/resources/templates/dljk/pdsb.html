@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>配电设备监测</title>
+    <style>
+        .r_top {
+            width: 95%;
+            height: 70px;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            border-bottom: 1px solid #c7c7c5;
+            text-align: center;
+            font-size: 20px;
+            display: flex;
+        }
+
+        .r-bom {
+            width: 95%;
+            height: 800px;
+            display: flex;
+        }
+
+        #title_pdsb {
+            width: 99.5%;
+            height: 20px;
+            background-color: #c7c7c5;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            border: 1px solid #c7c7c5;
+        }
+
+        #left_pdsb {
+            width: 20%;
+            height: 100vh;
+        }
+
+        #right_pdsb {
+            width: 80%;
+            height: 670px;
+        }
+
+        #bom_pdsb {
+            width: 99.9%;
+            height: 670px;
+            display: flex;
+        }
+
+        #tableContainer {
+            margin-left: 20px;
+        }
+
+        #r-bom-1 {
+            width: 400px;
+            height: 500px;
+            margin-right: 200px;
+            margin-top: 10px;
+        }
+
+        #r-bom-2 {
+            width: 400px;
+            height: 500px;
+            margin-top: 10px;
+        }
+
+        /* 左侧导航优化 */
+        #navTree {
+            width: 280px;
+            height: 100%;
+            background: #fff;
+            padding: 15px 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .layui-table thead th {
+            background: #e5e5e5 !important;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .layui-table td {
+            padding: 8px 15px;
+        }
+
+        .param-name {
+            font-weight: bold;
+        }
+
+        .table-header {
+            background-color: #e5e5e5;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <div id="title_pdsb">&nbsp;&nbsp;配电设备监测</div>
+    <div id="bom_pdsb">
+        <div id="left_pdsb">
+            <div class="layui-panel" id="navTree"></div>
+        </div>
+        <div id="right_pdsb">
+            <div class="r_top">
+                <div style="width: 30%;margin:15px;font-size: 28px" id="pdsbbodytitle">请选择设备</div>
+                <div style="width: 40%;margin: 25px" id="pdsbboytime">-- -- -- -- --</div>
+                <button class="layui-btn" style="margin: 15px" id="refreshBtn">数据召唤</button>
+            </div>
+            <div class="r-bom">
+                <div id="r-bom-1">
+                    <div style="width: 100%;text-align: center">运行工况</div>
+                    <table id="tableContainer" class="layui-table">
+                        <thead>
+                            <tr>
+                                <th width="50%">信息</th>
+                                <th width="50%">值</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataBody">
+                            <tr>
+                                <td colspan="2" style="text-align: center">请从左侧选择设备</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+<!--                <div id="r-bom-2">-->
+<!--                    <div style="width: 100%;text-align: center">设备图片</div>-->
+<!--                    <div-->
+<!--                        style="width: 100%; height: 400px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin-top: 20px;">-->
+<!--                        <i class="layui-icon layui-icon-picture" style="font-size: 50px; color: #ccc;"></i>-->
+<!--                    </div>-->
+<!--                </div>-->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $ =layui.jquery;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            layui.use(['tree', 'jquery', 'layer'], function () {
+                const tree = layui.tree;
+                const $ = layui.jquery;
+                const layer = layui.layer;
+
+                // 初始化时间显示
+                updateTime();
+
+                // 存储当前选中的节点
+                let currentNode = null;
+
+                // 渲染设备树
+                tree.render({
+                    elem: '#navTree',
+                    data: [
+                        {
+                            title: '西区1#配电室',
+                            spread: true,
+                            children: [
+                                { title: '1#变压器', extraInfo: '1AA1-1', deviceType: 'transformer',deviceId: '300',wendu:[50,51,52] },
+                                { title: '2#变压器', extraInfo: '2AA15-1', deviceType: 'transformer',deviceId: '300',wendu:[53,54,55] },
+                                { title: '3#变压器', extraInfo: '3AA1-1', deviceType: 'transformer',deviceId: '300',wendu:[56,57,58] },
+                                { title: '4#变压器', extraInfo: '4AA17-1', deviceType: 'transformer',deviceId: '300',wendu:[59,60,61] },
+                                { title: '1AA3 1#电容补偿主柜', extraInfo: '1AA3-1', deviceType: 'capacitor' },
+                                { title: '1AA4 1#电容补偿辅柜', extraInfo: '1AA4-1', deviceType: 'capacitor' },
+                                { title: '2AA13 2#电容补偿辅柜', extraInfo: '2AA13-1', deviceType: 'capacitor' },
+                                { title: '2AA14 2#电容补偿主柜', extraInfo: '2AA14-1', deviceType: 'capacitor' },
+                                { title: '3AA3 3#电容补偿主柜', extraInfo: '3AA3-1', deviceType: 'capacitor' },
+                                { title: '3AA4 3#电容补偿辅柜', extraInfo: '3AA4-1', deviceType: 'capacitor' },
+                                { title: '4AA15 4#电容补偿辅柜', extraInfo: '4AA15-1', deviceType: 'capacitor' },
+                                { title: '4AA16 4#电容补偿主柜', extraInfo: '4AA16-1', deviceType: 'capacitor' },
+                                // { title: '直流屏', extraInfo: 'ZXP-1', deviceType: 'panel' },
+                                // { title: '信号屏', extraInfo: 'XHP-1', deviceType: 'panel' },
+                            ]
+                        },
+                        {
+                            title: '东区2#配电室',
+                            children: [
+                                { title: '1#变压器', extraInfo: '2-1AA1-1', deviceType: 'transformer' ,deviceId: '319',wendu:[60,61,62] },
+                                { title: '2#变压器', extraInfo: '2-2AA14-1', deviceType: 'transformer' ,deviceId: '319',wendu:[63,64,65] },
+                                { title: '3#变压器', extraInfo: '2-3AA1-1', deviceType: 'transformer' ,deviceId: '319',wendu:[66,67,68] },
+                                { title: '4#变压器', extraInfo: '2-4AA14-1', deviceType: 'transformer' ,deviceId: '319',wendu:[69,70,71] },
+                                { title: '1AA3 1#电容补偿柜', extraInfo: '2-1AA3-1', deviceType: 'capacitor' },
+                                { title: '1AA4 1#电容补偿柜', extraInfo: '2-1AA4-1', deviceType: 'capacitor' },
+                                { title: '2AA12 2#电容补偿柜', extraInfo: '2-2AA12-1', deviceType: 'capacitor' },
+                                { title: '2AA13 2#电容补偿柜', extraInfo: '2-2AA13-1', deviceType: 'capacitor' },
+                                { title: '3AA3 2#电容补偿柜', extraInfo: '2-3AA3-1', deviceType: 'capacitor' },
+                                { title: '3AA4 2#电容补偿柜', extraInfo: '2-3AA4-1', deviceType: 'capacitor' },
+                                { title: '4AA12 2#电容补偿柜', extraInfo: '2-4AA12-1', deviceType: 'capacitor' },
+                                { title: '4AA13 2#电容补偿柜', extraInfo: '2-4AA13-1', deviceType: 'capacitor' },
+
+
+                                // { title: '直流屏', extraInfo: '2AA9-1', deviceType: 'panel' },
+                                // { title: '信号屏', extraInfo: '2AA10-1', deviceType: 'panel' },
+                            ]
+                        },
+                        {
+                            title: '东区6#配电室',
+                            children: [
+                                { title: '1#变压器', extraInfo: '6-1AA1-1', deviceType: 'transformer',deviceId: '325',wendu:[210,211,212] },
+                                { title: '2#变压器', extraInfo: '6-2AA11-1', deviceType: 'transformer',deviceId: '325',wendu:[213,214,215] },
+                                { title: '1AA3 1#电容补偿柜', extraInfo: '6-1AA3-1', deviceType: 'capacitor' },
+                                { title: '1AA4 1#电容补偿柜', extraInfo: '6-1AA4-1', deviceType: 'capacitor' },
+                                { title: '2AA9 1#电容补偿柜', extraInfo: '6-2AA9-1', deviceType: 'capacitor' },
+                                { title: '2AA10 1#电容补偿柜', extraInfo: '6-2AA10-1', deviceType: 'capacitor' },
+                                //
+
+                                // { title: '直流屏', extraInfo: '6AA9-1', deviceType: 'panel' },
+                                // { title: '信号屏', extraInfo: '6AA10-1', deviceType: 'panel' },
+                            ]
+                        }
+                    ],
+                    showLine: true,
+                    accordion: true,
+                    click: function (obj) {
+                        document.getElementById("pdsbbodytitle").innerHTML = obj.data.title;
+                        updateTime();
+                        // 保存当前节点
+                        currentNode = obj.data;
+                        fetchDeviceData(obj.data.extraInfo, obj.data.deviceType,obj.data.deviceId,obj.data.wendu);
+                    }
+                });
+
+                // 变压器设备编号到温度传感器编号的映射
+                const transformerTempMap = {
+                    '1AA1-1': [50, 51, 52], // 1#变压器对应的温度传感器编号
+                    '2AA15-1': [53, 54, 55], // 2#变压器
+                    '3AA1-1': [56, 57, 58], // 3#变压器
+                    '4AA17-1': [59, 60, 61], //4#变压器
+                    'XHP-1': [62, 63, 64, 65, 66, 67, 68, 69],
+                    'ZLP-1': []
+                };
+                // 数据召唤按钮点击事件
+                $('#refreshBtn').click(function () {
+                    if (currentNode) {
+                        fetchDeviceData(currentNode.extraInfo, currentNode.deviceType,currentNode.deviceId1,currentNode.wendu);
+                    } else {
+                        layer.msg('请先选择一个设备', { icon: 2 });
+                    }
+                    // 更新时间显示
+                    updateTime();
+                });
+
+                // 更新时间的函数
+                function updateTime() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                    document.getElementById("pdsbboytime").innerHTML = currentTime;
+                }
+
+                // 获取设备数据的函数
+                function fetchDeviceData(deviceId, deviceType,deviceId1,wendu) {
+                    debugger
+                    // 显示加载中
+                    $('#dataBody').html('<tr><td colspan="2" style="text-align: center">数据加载中...</td></tr>');
+
+                    if (deviceType === 'transformer') {
+                        debugger
+                        // 获取运行工况数据
+                        const promise1 = $.getJSON('http://192.168.1.227:8081/hdb/getDBnewDate', { name: deviceId });
+                        
+                        // 获取温度数据
+                        const promise2 = $.ajax({
+                            url: "http://192.168.1.227:8081/fhsb/fhsbData",
+                            data: {
+                                wangguanhao: deviceId1,
+                                shebeihao: wendu
+                            }
+                        });
+                        const extractTemperature = (data, suffix) => {
+                            const key = Object.keys(data).find(k => k.endsWith(suffix));
+                            if (!key || data[key] === undefined || data[key] === null || data[key] === '') {
+                                return 'N/A';
+                            }
+                            return (Number(data[key]) / 10) + "°C";
+                        };
+                        
+                        // 等待两个请求都完成
+                        Promise.all([promise1, promise2])
+                            .then(function([data1, data2]) {
+                                // 合并数据
+                                const mergedData = {
+                                    ...data1,
+                                    "变压器A相温度": extractTemperature(data2, '.AT'),
+                                    "变压器B相温度": extractTemperature(data2, '.BT'),
+                                    "变压器C相温度": extractTemperature(data2, '.CT')
+                                };
+                                displayData(mergedData, deviceType);
+                            })
+                            .catch(function() {
+                                $('#dataBody').html('<tr><td colspan="2" style="text-align: center; color: red">数据加载失败</td></tr>');
+                            });
+                    } else if (deviceType === 'panel') {
+                        const sensorIds = transformerTempMap[deviceId] || [];
+                        $.ajax({
+                            url: "http://192.168.1.227:8081/fhsb/fhsbData",
+                            data: {
+                                wangguanhao: 300,
+                                shebeihao: sensorIds
+                            }
+                        }).done(function(data) {
+                            console.log(data);
+                            displayData(data, deviceType);
+                        }).fail(function() {
+                            $('#dataBody').html('<tr><td colspan="2" style="text-align: center; color: red">数据加载失败</td></tr>');
+                        });
+                    } else {
+                        debugger
+                        // 其他设备只调用一个接口
+                        $.getJSON('http://192.168.1.227:8081/hdb/getDBnewDate', { name: deviceId }, function(data) {
+                            console.log(data);
+                            displayData(data, deviceType);
+                        }).fail(function() {
+                            $('#dataBody').html('<tr><td colspan="2" style="text-align: center; color: red">数据加载失败</td></tr>');
+                        });
+                    }
+                }
+
+                // 显示数据的函数
+                function displayData(data, deviceType) {
+                    debugger
+                    let tableContent = '';
+
+                    if (deviceType === 'transformer') {
+                        const transformerData = {
+                            "二次侧A相相电压": (data.Uan || 'N/A') + "V",
+                            "二次侧B相相电压": (data.Ubn || 'N/A') + "V",
+                            "二次侧C相相电压": (data.Ucn || 'N/A') + "V",
+                            "二次侧A相相电流": (data.Ia || 'N/A') + "A",
+                            "二次侧B相相电流": (data.Ib || 'N/A') + "A",
+                            "二次侧C相相电流": (data.Ic || 'N/A') + "A",
+                            "总视在功率": (data.S || 'N/A') + "kVA",
+                            "总有功功率": (data.W || 'N/A') + "kW",
+                            "总功率因数": data.PF || 'N/A',
+                            "变压器A相温度": data["变压器A相温度"] || 'N/A',
+                            "变压器B相温度": data["变压器B相温度"] || 'N/A',
+                            "变压器C相温度": data["变压器C相温度"] || 'N/A'
+                        };
+                        
+                        const keys = [
+                            "二次侧A相相电压", "二次侧B相相电压", "二次侧C相相电压",
+                            "二次侧A相相电流", "二次侧B相相电流", "二次侧C相相电流",
+                            "总视在功率", "总有功功率", "总功率因数",
+                            "变压器A相温度", "变压器B相温度", "变压器C相温度"
+                        ];
+                        
+                        for (const key of keys) {
+                            tableContent += `<tr><td class="param-name">${key}</td><td>${transformerData[key]}</td></tr>`;
+                        }
+                    } else if (deviceType === 'capacitor') {
+                        const capacitorData = {
+                            "无功补偿功率": (data.Q !== undefined && data.Q !== null ? data.Q + "kVar" : 'N/A'),
+                            "电容柜A相电流": (data.Ia !== undefined && data.Ia !== null ? data.Ia + "A" : 'N/A'),
+                            "电容柜B相电流": (data.Ib !== undefined && data.Ib !== null ? data.Ib + "A" : 'N/A'),
+                            "电容柜C相电流": (data.Ic !== undefined && data.Ic !== null ? data.Ic + "A" : 'N/A'),
+                            "电容柜温度": (data.T !== undefined && data.T !== null ? data.T + "°C" : 'N/A'),
+                            "总功率因数": data.PF !== undefined && data.PF !== null ? data.PF : 'N/A'
+                        };
+                        const keys = [
+                            "无功补偿功率", "电容柜A相电流", "电容柜B相电流",
+                            "电容柜C相电流", "电容柜温度", "总功率因数"
+                        ];
+
+                        for (const key of keys) {
+                            tableContent += `<tr><td class="param-name">${key}</td><td>${capacitorData[key] || 'N/A'}</td></tr>`;
+                        }
+                    } else if (deviceType === 'panel') {
+                        const panelData = {
+                            "1路输入交流AB相电压": (data.S2_Vab/10 || 'N/A') + "V",
+                            "1路输入交流BC相电压": (data.S1_Vbc/10 || 'N/A') + "V",
+                            "1路输入交流CA相电压": (data.S1_Vac/10 || 'N/A') + "V",
+                            "2路输入交流AB相电压": (data.S2_Vab/10 || 'N/A') + "V",
+                            "2路输入交流BC相电压": (data.S2_Vbc/10 || 'N/A') + "V",
+                            "2路输入交流CA相电压": (data.S2_Vac/10 || 'N/A') + "V",
+                            "输出直流（蓄电池）电压": (data.Vbat/10 || 'N/A') + "V",
+                            "蓄电池充电电流": (data.Ibat/10 || 'N/A') + "A"
+                        };
+                        const keys = [
+                            "1路输入交流AB相电压", "1路输入交流BC相电压", "1路输入交流CA相电压",
+                            "2路输入交流AB相电压", "2路输入交流BC相电压", "2路输入交流CA相电压",
+                            "输出直流（蓄电池）电压", "蓄电池充电电流"
+                        ];
+
+                        for (const key of keys) {
+                            tableContent += `<tr><td class="param-name">${key}</td><td>${panelData[key] || 'N/A'}</td></tr>`;
+                        }
+                    }
+0.
+                    $('#dataBody').html(tableContent);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

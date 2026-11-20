@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>能耗计量分析</title>
+
+
+    <style>
+        #title_zxjt{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*padding-left: 10px;*/
+            /*border: 1px solid #c7c7c5;*/
+
+        }
+        /* 整体布局 */
+        .sys-container {
+            display: flex;
+            height: 100vh;
+            background: #f8f8f8;
+        }
+        /* 左侧导航优化 */
+        #navTree {
+            width: 400px;
+            height: 95%;
+            background: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            /*background-color: #5FB878;*/
+            /*max-width: 400px; !* 可根据需要调整 *!*/
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+        /* 右侧表格区域 */
+        .data-panel {
+            flex: 1;
+            padding-left: 10px;
+            position: relative;
+        }
+        .layui-table{
+            width: 100%;
+        }
+        .layui-table thead th {
+            background: #16b9a9 !important;
+            font-size: 14px !important;
+            color: #ffffff !important;
+        }
+        .layui-table td {
+            font-size: 13px !important;
+            color: #333 !important;
+            /*height: 25px;*/
+        }
+
+        /*.layui-tree {*/
+        /*    max-width: 400px; !* 可根据需要调整 *!*/
+        /*    overflow-x: auto;*/
+        /*    overflow-y: hidden;*/
+        /*    white-space: nowrap;*/
+        /*    height: 800px;*/
+        /*}*/
+
+        .tree-container {
+            /*border: 1px solid #e6e6e6;*/
+            border-radius: 4px;
+
+            width: 500px; /* 新增：固定宽度300px */
+            overflow-x: auto; /* 新增：水平溢出时显示滚动条 */
+            overflow-y: auto; /* 新增：水平溢出时显示滚动条 */
+        }
+        .tree-node {
+            /*margin: 6px 0;*/
+            position: relative;
+            padding: 3px 4px;
+            /*padding: 6px 8px;*/
+            border-radius: 4px;
+        }
+        .tree-children {
+            margin-left: 28px;
+            border-left: 1px dashed #e6e6e6;
+            padding-left: 16px;
+            display: none;
+        }
+        .tree-node.open > .tree-children {
+            display: block;
+        }
+        .node-content {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .node-checkbox {
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .node-icon {
+            margin-right: 8px;
+            color: #009688;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+        .node-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .node-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            white-space: nowrap;
+            /*overflow: hidden;*/
+            /*text-overflow: ellipsis;*/
+        }
+        .node-title:hover {
+            color: #009688;
+        }
+        .action-bar {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .popup-content {
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow: auto;
+            padding: 15px;
+        }
+        .popup-node {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+        .popup-header {
+            color: #009688;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .popup-row {
+            margin-bottom: 8px;
+            display: flex;
+        }
+        .popup-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: #555;
+        }
+        .popup-value {
+            flex: 1;
+        }
+        /* 新增全选相关样式 */
+        .node-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+        }
+        .node-checkbox.checked::after {
+            content: "✓";
+            position: absolute;
+            color: #16b9a9;
+            font-size: 14px;
+            top: -2px;
+            left: 1px;
+        }
+        .checkbox-container {
+            padding: 5px 10px;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-container .node-checkbox {
+            margin-right: 8px;
+        }
+        .checkbox-container .check-all-text {
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+    <script src="../../static/cms/layui.js"></script>
+    <script src="../../static/layui/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="../../static/cms/css/layui.css">
+    <script src="../../static/ExcelJS/exceljs.min.js"></script>
+    <script src="../../static/ExcelJS/FileSaver.min.js"></script>
+
+</head>
+<body>
+
+<div id="title_zxjt">&nbsp;&nbsp;&nbsp;能耗统计分析</div>
+
+<div class="sys-container " >
+    <!-- 简化后的导航树 -->
+    <div id="navTree">
+         <div class="tree-container">
+                <div class="energy-toolbar"><button id="energySave" type="button">保存修改</button><button id="energyReset" type="button">重置树结构</button><span id="dirty"></span></div><div id="treeRoot"></div>
+            </div>
+    </div>
+
+    <!-- 数据展示区域 -->
+    <div class="data-panel layui-tab layui-tab-card" style="margin: 0px;">
+
+        <!--        设备台账-->
+        <div class="sbtz">
+            <!-- 表格查询区域 -->
+            <div class="search-bar layui-form" style="display: flex;padding: 5px">
+                    <span style="padding-top: 10px">起始日期:</span>
+                <input type="text" value="2025-04-01" class="layui-input layui-date" id="startDate"
+                       style="width: 150px; ">
+                -
+                <input type="text" placeholder="0.00" class="layui-input" id="endDate"
+                       style="width: 150px;">
+                <span style="padding-top: 10px">结束日期:</span>
+                <input type="text" value="2025-04-01" class="layui-input layui-date" id="startDates"
+                       style="width: 150px; ">
+                -
+                <input type="text" placeholder="0.00" class="layui-input" id="endDates"
+                       style="width: 150px;">
+                <div style="width: 20px"></div>
+                <button class="layui-btn" id="chaxun" onclick="chaxun()">查询</button>
+                <button type="button" class="layui-btn" id="exportBtn" style="margin-left: 10px;">导出Excel</button>
+            </div>
+            <!-- 设备台账表格 -->
+            <table id="deviceTable" lay-filter="deviceTable"></table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $ =layui.jquery;
+
+    // 全局变量存储选中的节点信息
+    let selectedNodesInfo = [];
+
+    // 等待页面加载完成
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
+        
+        // 初始化开始日期选择器
+        laydate.render({
+            elem: '#startDate',  // 对应开始日期输入框的ID
+            type: 'date',        // 日期类型
+            format: 'yyyy-MM-dd' // 日期格式
+        });
+        
+        // 初始化结束日期选择器
+        laydate.render({
+            elem: '#startDates',
+            type: 'date',
+            format: 'yyyy-MM-dd'
+        });
+
+        laydate.render({
+            elem: '#endDate',
+            type: 'time',
+            format: 'HH:mm:ss'
+        });
+
+        laydate.render({
+            elem: '#endDates',
+            type: 'time',
+            format: 'HH:mm:ss'
+        });
+    });
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取今日日期
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        const formattedDate = formatDate(today);
+        const formattedDates = formatDate(thirtyDaysAgo);
+
+        document.getElementById('startDates').value = formattedDate;
+        document.getElementById('startDate').value = formattedDates;
+        document.getElementById('endDate').value = '00:00:00';
+        document.getElementById('endDates').value = '00:00:00';
+
+
+    });
+
+    function chaxun(){
+        var value = document.getElementById("startDate").value; //开始时间
+        var values = document.getElementById("startDates").value; //结束时间
+        // alert(value +values)
+    }
+
+    layui.use('form', function () {
+        var form = layui.form;
+        form.render();
+    });
+
+    const treeData = [
+    {
+        id: "1",
+        name: "西区1#配电室",
+        extraInfo: "",
+        pds: "1#配电室",
+        open: true,
+        children: [
+            {
+                id: "1-1",
+                name: "201:1#进线柜",
+                extraInfo: "",
+                pds: "1#配电室",
+                spread: true,
+                children: [
+                    {
+                        id: "1-1-1",
+                        name: "211:1#变压器",
+                        extraInfo: "1AA1-1",
+                        pds: "1#配电室",
+                        spread: true,
+                        children: [
+                            {
+                                id: "1-1-1-1",
+                                name: "401#低压进线一",
+                                extraInfo: "1AA1-1",
+                                pds: "1#配电室",
+                                spread: true,
+                                children: [
+                                    {id: "1-1-1-1-1", name: "1AA6-1:6 号核心筒照明 1", extraInfo: "1AA6-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-2", name: "1AA6-2: 景观照明预留 1", extraInfo: "1AA6-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-3", name: "1AA6-3: 备用 ", extraInfo: "1AA6-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-4", name: "1AA6-4: 备用 ", extraInfo: "1AA6-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-5", name: "1AA7-1:7 号核心筒照明 3", extraInfo: "1AA7-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-6", name: "1AA7-2: 景观照明预留 2", extraInfo: "1AA7-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-7", name: "1AA7-3: 备用 ", extraInfo: "1AA7-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-8", name: "1AA7-4: 备用 ", extraInfo: "1AA7-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-9", name: "1AA8-1:10 号核心筒照明 5", extraInfo: "1AA8-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-10", name: "1AA8-2: 照明 13", extraInfo: "1AA8-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-11", name: "1AA8-3: 照明 14", extraInfo: "1AA8-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-12", name: "1AA8-4: 备用 ", extraInfo: "1AA8-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-13", name: "1AA8-5: 备用 ", extraInfo: "1AA8-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-14", name: "1AA9-1:11 号核心筒照明 7", extraInfo: "1AA9-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-15", name: "1AA9-2: 备用 ", extraInfo: "1AA9-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-16", name: "1AA9-3: 备用 ", extraInfo: "1AA9-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-17", name: "1AA9-4: 备用 ", extraInfo: "1AA9-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-18", name: "1AA10-1: 照明 9", extraInfo: "1AA10-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-19", name: "1AA10-2: 照明 10", extraInfo: "1AA10-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-20", name: "1AA10-3: 照明 11", extraInfo: "1AA10-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-21", name: "1AA10-4: 照明 12", extraInfo: "1AA10-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-22", name: "1AA10-5: 备用 ", extraInfo: "1AA10-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-23", name: "1AA10-6: 备用 ", extraInfo: "1AA10-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-24", name: "1AA10-7: 备用 ", extraInfo: "1AA10-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-25", name: "1AA11-1: 交易办公负荷 1（备用）", extraInfo: "1AA11-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-26", name: "1AA11-2: 交易办公负荷 2（备用）", extraInfo: "1AA11-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-27", name: "1AA11-3: 备用 ", extraInfo: "1AA11-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-28", name: "1AA11-4: 董事会同声传译室 ", extraInfo: "1AA11-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-29", name: "1AA11-5: 档案室 ", extraInfo: "1AA11-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-30", name: "1AA11-6: 备用 ", extraInfo: "1AA11-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-31", name: "1AA11-7: 备用 ", extraInfo: "1AA11-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-32", name: "1AA11-8: 备用 ", extraInfo: "1AA11-8", pds: "1#配电室"},
+                                    {id: "1-1-1-1-33", name: "1AA12-1: 交易办公负荷 ", extraInfo: "1AA12-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-34", name: "1AA12-2: 副行政办公区负荷 1（备用）", extraInfo: "1AA12-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-35", name: "1AA12-3: 副行政办公区负荷 2（备用）", extraInfo: "1AA12-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-36", name: "1AA12-4: 直流屏电源 ", extraInfo: "1AA12-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-37", name: "1AA12-5: 备用 ", extraInfo: "1AA12-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-38", name: "1AA12-6: B2洗浴 ", extraInfo: "1AA12-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-39", name: "1AA12-7: 备用 ", extraInfo: "1AA12-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-40", name: "1AA13-1: 行政办公区负荷 1（备用）", extraInfo: "1AA13-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-41", name: "1AA13-2: 行政办公区负荷 2", extraInfo: "1AA13-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-42", name: "1AA13-3: 行政办公区负荷 3", extraInfo: "1AA13-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-43", name: "1AA13-4: 行政办公区负荷 4", extraInfo: "1AA13-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-44", name: "1AA13-5: 董事会 ", extraInfo: "1AA13-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-45", name: "1AA13-6: 备用 ", extraInfo: "1AA13-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-46", name: "1AA13-7: 备用 ", extraInfo: "1AA13-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-47", name: "1AA13-8: 备用 ", extraInfo: "1AA13-8", pds: "1#配电室"},
+                                    {id: "1-1-1-1-48", name: "1AA14-1:6 号核心筒办公区重要负荷 1", extraInfo: "1AA14-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-49", name: "1AA14-2:6 号核心筒办公区重要负荷 2", extraInfo: "1AA14-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-50", name: "1AA14-3:6 号核心筒办公区重要负荷 3", extraInfo: "1AA14-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-51", name: "1AA14-4:6 号核心筒办公区重要负荷 4", extraInfo: "1AA14-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-52", name: "1AA14-5:6 号核心筒办公区重要负荷 5", extraInfo: "1AA14-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-53", name: "1AA14-6:6 号核心筒办公区重要负荷 6", extraInfo: "1AA14-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-54", name: "1AA14-7:6 号核心筒办公区重要负荷 7", extraInfo: "1AA14-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-55", name: "1AA14-8:6 号核心筒办公区重要负荷 8", extraInfo: "1AA14-8", pds: "1#配电室"},
+                                    {id: "1-1-1-1-56", name: "1AA14-9: 备用 ", extraInfo: "1AA14-9", pds: "1#配电室"},
+                                    {id: "1-1-1-1-57", name: "1AA15-1: 备用 ", extraInfo: "1AA15-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-58", name: "1AA15-2: 备用 ", extraInfo: "1AA15-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-59", name: "1AA15-3: 扶梯 / 擦窗（备用）", extraInfo: "1AA15-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-60", name: "1AA15-4: 中水泵房（备用）", extraInfo: "1AA15-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-61", name: "1AA15-5: 备用 ", extraInfo: "1AA15-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-62", name: "1AA15-6: 备用 ", extraInfo: "1AA15-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-63", name: "1AA16-1:6 号核心筒客梯 1（备用）", extraInfo: "1AA16-1", pds: "1#配电室"},
+                                    {id: "1-1-1-1-64", name: "1AA16-2:7 号核心筒客梯 2（备用）", extraInfo: "1AA16-2", pds: "1#配电室"},
+                                    {id: "1-1-1-1-65", name: "1AA16-3:10 号核心筒客梯 3（备用）", extraInfo: "1AA16-3", pds: "1#配电室"},
+                                    {id: "1-1-1-1-66", name: "1AA16-4:11 号核心筒客梯 4（备用）", extraInfo: "1AA16-4", pds: "1#配电室"},
+                                    {id: "1-1-1-1-67", name: "1AA16-5: 潜污泵 1（备用）", extraInfo: "1AA16-5", pds: "1#配电室"},
+                                    {id: "1-1-1-1-68", name: "1AA16-6: 潜污泵 2（备用）", extraInfo: "1AA16-6", pds: "1#配电室"},
+                                    {id: "1-1-1-1-69", name: "1AA16-7: 给水泵房（备用）", extraInfo: "1AA16-7", pds: "1#配电室"},
+                                    {id: "1-1-1-1-70", name: "1AA16-8: 备用 ", extraInfo: "1AA16-8", pds: "1#配电室"},
+                                    {id: "1-1-1-1-71", name: "1AA16-9: 备用 ", extraInfo: "1AA16-9", pds: "1#配电室"}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "1-1-2",
+                        name: "211:3#变压器",
+                        extraInfo: "3AA1-1",
+                        pds: "1#配电室",
+                        children: [
+                            {
+                                id: "1-1-2-1",
+                                name: "403#低压进线三",
+                                extraInfo: "3AA1-1",
+                                pds: "1#配电室",
+                                children: [
+                                    {id: "1-1-2-1-1", name: "3AA6-1: 充电桩 1", extraInfo: "3AA6-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-2", name: "3AA6-2: 充电桩 2", extraInfo: "3AA6-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-3", name: "3AA6-3: 充电桩 3", extraInfo: "3AA6-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-4", name: "3AA6-4: 充电桩 4", extraInfo: "3AA6-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-5", name: "3AA6-5: 备用 ", extraInfo: "3AA6-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-6", name: "3AA7-1: 充电桩 5", extraInfo: "3AA7-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-7", name: "3AA7-2: 空调设备", extraInfo: "3AA7-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-8", name: "3AA7-3: 空调设备", extraInfo: "3AA7-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-9", name: "3AA7-4: 备用 ", extraInfo: "3AA7-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-10", name: "3AA7-5: 备用 ", extraInfo: "3AA7-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-11", name: "3AA8-1: 空调设备 11", extraInfo: "3AA8-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-12", name: "3AA8-2: 空调设备 12", extraInfo: "3AA8-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-13", name: "3AA8-3: 空调设备 13", extraInfo: "3AA8-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-14", name: "3AA8-4: 备用 ", extraInfo: "3AA8-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-15", name: "3AA9-1:6/7/10/11 号核心筒应急照明（备用）", extraInfo: "3AA9-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-16", name: "3AA9-2:1 号变配电室 1 号柴发机房（备用）", extraInfo: "3AA9-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-17", name: "3AA9-3: 一二期消防安防控制室消防设备 ", extraInfo: "3AA9-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-18", name: "3AA9-4: 备用 ", extraInfo: "3AA9-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-19", name: "3AA9-5: 备用 ", extraInfo: "3AA9-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-20", name: "3AA9-6: 备用 ", extraInfo: "3AA9-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-21", name: "3AA9-7: 备用 ", extraInfo: "3AA9-7", pds: "1#配电室"},
+                                    {id: "1-1-2-1-33", name: "3AA10-1: 消防潜污泵 3 (备用)", extraInfo: "3AA10-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-34", name: "3AA10-2: 消防潜污泵 4 (备用)", extraInfo: "3AA10-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-35", name: "3AA10-3: 消防稳压泵 ", extraInfo: "3AA10-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-36", name: "3AA10-4: 备用 ", extraInfo: "3AA10-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-37", name: "3AA10-5: 备用 ", extraInfo: "3AA10-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-38", name: "3AA10-6: 备用 ", extraInfo: "3AA10-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-39", name: "3AA11-1: 消防风机 1（备用）", extraInfo: "3AA11-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-40", name: "3AA11-2: 消防风机 2（备用）", extraInfo: "3AA11-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-41", name: "3AA11-3: 消防风机 3（备用）", extraInfo: "3AA11-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-42", name: "3AA11-4: 消防风机 4（备用）", extraInfo: "3AA11-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-43", name: "3AA11-5: 消防风机 5（备用）", extraInfo: "3AA11-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-44", name: "3AA11-6: 备用 ", extraInfo: "3AA11-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-45", name: "3AA11-7: 备用 ", extraInfo: "3AA11-7", pds: "1#配电室"},
+                                    {id: "1-1-2-1-46", name: "3AA12-1: 消防风机 6（备用）", extraInfo: "3AA12-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-47", name: "3AA12-2: 消防风机 7（备用）", extraInfo: "3AA12-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-48", name: "3AA12-3: 消防风机 8（备用）", extraInfo: "3AA12-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-49", name: "3AA12-4: 消防风机 9（备用）", extraInfo: "3AA12-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-50", name: "3AA12-5: 消防风机 10（备用）", extraInfo: "3AA12-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-51", name: "3AA12-6: 备用 ", extraInfo: "3AA12-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-52", name: "3AA13-1: 消防水泵房（备用）", extraInfo: "3AA13-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-53", name: "3AA13-2: 消防潜污泵 1（备用）", extraInfo: "3AA13-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-54", name: "3AA13-3: 消防潜污泵 2（备用）", extraInfo: "3AA13-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-55", name: "3AA13-4: 备用 ", extraInfo: "3AA13-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-56", name: "3AA13-5: 备用 ", extraInfo: "3AA13-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-57", name: "3AA14-1: 一期和二期网络机房（备用）", extraInfo: "3AA14-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-58", name: "3AA14-2: 一期和二期网络机房空调 ", extraInfo: "3AA14-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-59", name: "3AA14-3: 备用 ", extraInfo: "3AA14-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-60", name: "3AA14-4: 备用 ", extraInfo: "3AA14-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-61", name: "3AA14-5: 备用 ", extraInfo: "3AA14-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-62", name: "3AA15-1: 一期和二期消防安防控制室安防设备 ", extraInfo: "3AA15-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-63", name: "3AA15-2:AIIB 安防存储机房（备用）", extraInfo: "3AA15-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-64", name: "3AA15-3:AIIB 交易设备机房（备用）", extraInfo: "3AA15-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-65", name: "3AA15-4: 备用 ", extraInfo: "3AA15-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-66", name: "3AA16-1: 弱电 CA 用电 (备用)", extraInfo: "3AA16-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-67", name: "3AA16-2: 弱电 SA 用电 (备用)", extraInfo: "3AA16-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-68", name: "3AA16-3: 弱电 ELV 用电 (备用)", extraInfo: "3AA16-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-69", name: "3AA16-4: 卫星接收机房和卫星通讯机房 (备用)", extraInfo: "3AA16-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-70", name: "3AA16-5: 备用 ", extraInfo: "3AA16-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-71", name: "3AA16-6: 备用 ", extraInfo: "3AA16-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-72", name: "3AA17-1: 备用 ", extraInfo: "3AA17-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-73", name: "3AA17-2: 备用 ", extraInfo: "3AA17-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-74", name: "3AA17-3: 电动排烟窗 1", extraInfo: "3AA17-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-75", name: "3AA17-4: 电动排烟窗 2", extraInfo: "3AA17-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-76", name: "3AA17-5: 办公区电动窗 2", extraInfo: "3AA17-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-77", name: "3AA17-6: 消防电梯 1（备用）", extraInfo: "3AA17-6", pds: "1#配电室"},
+                                    {id: "1-1-2-1-78", name: "3AA17-7: 消防电梯 2（备用）", extraInfo: "3AA17-7", pds: "1#配电室"},
+                                    {id: "1-1-2-1-79", name: "3AA18-1: 消防电梯 3（备用）", extraInfo: "3AA18-1", pds: "1#配电室"},
+                                    {id: "1-1-2-1-80", name: "3AA18-2: 消防电梯 4（备用）", extraInfo: "3AA18-2", pds: "1#配电室"},
+                                    {id: "1-1-2-1-81", name: "3AA18-3: 热交换站 ", extraInfo: "3AA18-3", pds: "1#配电室"},
+                                    {id: "1-1-2-1-82", name: "3AA18-4: 备用 ", extraInfo: "3AA18-4", pds: "1#配电室"},
+                                    {id: "1-1-2-1-83", name: "3AA18-5: 备用 ", extraInfo: "3AA18-5", pds: "1#配电室"},
+                                    {id: "1-1-2-1-84", name: "3AA18-6: 备用 ", extraInfo: "3AA18-6", pds: "1#配电室"}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "1-3",
+                name: "202:2#进线柜",
+                extraInfo: "",
+                pds: "1#配电室",
+                children: [
+                    {
+                        id: "1-3-1",
+                        name: "211:2#变压器",
+                        extraInfo: "2AA15-1",
+                        pds: "1#配电室",
+                        children: [
+                            {
+                                id: "1-3-1-1",
+                                name: "402#低压进线二",
+                                extraInfo: "2AA15-1",
+                                pds: "1#配电室",
+                                children: [
+                                    {id: "1-3-1-1-1", name: "2AA11-1:6 号核心筒照明 2", extraInfo: "2AA11-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-2", name: "2AA11-2: 备用 ", extraInfo: "2AA11-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-3", name: "2AA11-3: 备用 ", extraInfo: "2AA11-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-4", name: "2AA11-4: 备用 ", extraInfo: "2AA11-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-5", name: "2AA10-1:7 号核心筒照明 4", extraInfo: "2AA10-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-6", name: "2AA10-2: 备用 ", extraInfo: "2AA10-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-7", name: "2AA10-3: 备用 ", extraInfo: "2AA10-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-8", name: "2AA10-4: 备用 ", extraInfo: "2AA10-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-9", name: "2AA9-1:10 号核心筒照明 5", extraInfo: "2AA9-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-10", name: "2AA9-2: 备用 ", extraInfo: "2AA9-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-11", name: "2AA9-3: 备用 ", extraInfo: "2AA9-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-12", name: "2AA9-4: 备用 ", extraInfo: "2AA9-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-13", name: "2AA8-1:11 号核心筒照明 8", extraInfo: "2AA8-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-14", name: "2AA8-2: 备用 ", extraInfo: "2AA8-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-15", name: "2AA8-3: 备用 ", extraInfo: "2AA8-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-16", name: "2AA8-4: 备用 ", extraInfo: "2AA8-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-17", name: "2AA7-1: 扶梯 / 擦窗机 ", extraInfo: "2AA7-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-18", name: "2AA7-2: 备用 ", extraInfo: "2AA7-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-19", name: "2AA7-3: 备用 ", extraInfo: "2AA7-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-20", name: "2AA7-4: 中水泵房 ", extraInfo: "2AA7-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-21", name: "2AA7-5: 备用 ", extraInfo: "2AA7-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-22", name: "2AA7-6: 董事会、同声传译室（备用）", extraInfo: "2AA7-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-23", name: "2AA7-7: 备用 ", extraInfo: "2AA7-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-24", name: "2AA7-8: 备用 ", extraInfo: "2AA7-8", pds: "1#配电室"},
+                                    {id: "1-3-1-1-25", name: "2AA7-9: 备用 ", extraInfo: "2AA7-9", pds: "1#配电室"},
+                                    {id: "1-3-1-1-27", name: "2AA5-1: 走道照明 1", extraInfo: "2AA5-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-28", name: "2AA5-2: 走道照明 2", extraInfo: "2AA5-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-29", name: "2AA5-3: 备用 ", extraInfo: "2AA5-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-30", name: "2AA5-4: 董事会、同声传译室（备用）", extraInfo: "2AA5-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-31", name: "2AA5-5: 档案室（备用）", extraInfo: "2AA5-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-32", name: "2AA5-6: 备用 ", extraInfo: "2AA5-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-33", name: "2AA5-7: 备用 ", extraInfo: "2AA5-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-34", name: "2AA5-8: 备用 ", extraInfo: "2AA5-8", pds: "1#配电室"},
+                                    {id: "1-3-1-1-35", name: "2AA5-9: 备用 ", extraInfo: "2AA5-9", pds: "1#配电室"},
+                                    {id: "1-3-1-1-36", name: "2AA4-1: 交易办公负荷 ", extraInfo: "2AA4-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-37", name: "2AA4-2: 副行政办公区负荷 1（备用）", extraInfo: "2AA4-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-38", name: "2AA4-3: 副行政办公区负荷 2（备用）", extraInfo: "2AA4-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-39", name: "2AA4-4: 备用 ", extraInfo: "2AA4-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-40", name: "2AA4-5: 备用 ", extraInfo: "2AA4-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-41", name: "2AA4-6: 备用 ", extraInfo: "2AA4-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-42", name: "2AA4-7: 备用 ", extraInfo: "2AA4-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-43", name: "2AA3-1: 行政办公区负荷 1", extraInfo: "2AA3-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-44", name: "2AA3-2: 行政办公区负荷 2（备用）", extraInfo: "2AA3-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-45", name: "2AA3-3: 行政办公区负荷 3（备用）", extraInfo: "2AA3-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-46", name: "2AA3-4: 行政办公区负荷 4（备用）", extraInfo: "2AA3-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-47", name: "2AA3-5: 董事会（备用）", extraInfo: "2AA3-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-48", name: "2AA3-6: 备用 ", extraInfo: "2AA3-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-49", name: "2AA3-7: 备用 ", extraInfo: "2AA3-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-50", name: "2AA3-8: 备用 ", extraInfo: "2AA3-8", pds: "1#配电室"},
+                                    {id: "1-3-1-1-51", name: "2AA2-1:6 号核心筒办公区重要负荷 1（备用）", extraInfo: "2AA2-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-52", name: "2AA2-2:6 号核心筒办公区重要负荷 2（备用）", extraInfo: "2AA2-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-53", name: "2AA2-3:10 号核心筒办公区重要负荷 3（备用）", extraInfo: "2AA2-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-54", name: "2AA2-4:10 号核心筒办公区重要负荷 4（备用）", extraInfo: "2AA2-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-55", name: "2AA2-5:7 号核心筒办公区重要负荷 5（备用）", extraInfo: "2AA2-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-56", name: "2AA2-6:7 号核心筒办公区重要负荷 6（备用）", extraInfo: "2AA2-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-57", name: "2AA2-7:11 号核心筒办公区重要负荷 7（备用）", extraInfo: "2AA2-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-58", name: "2AA2-8:11 号核心筒办公区重要负荷 8（备用）", extraInfo: "2AA2-8", pds: "1#配电室"},
+                                    {id: "1-3-1-1-59", name: "2AA2-9: 备用 ", extraInfo: "2AA2-9", pds: "1#配电室"},
+                                    {id: "1-3-1-1-60", name: "2AA1-1: 备用 ", extraInfo: "2AA1-1", pds: "1#配电室"},
+                                    {id: "1-3-1-1-61", name: "2AA1-2: 备用 ", extraInfo: "2AA1-2", pds: "1#配电室"},
+                                    {id: "1-3-1-1-62", name: "2AA1-3:6 号核心筒客梯 1", extraInfo: "2AA1-3", pds: "1#配电室"},
+                                    {id: "1-3-1-1-63", name: "2AA1-4:7 号核心筒客梯 2", extraInfo: "2AA1-4", pds: "1#配电室"},
+                                    {id: "1-3-1-1-64", name: "2AA1-5:10 号核心筒客梯 3", extraInfo: "2AA1-5", pds: "1#配电室"},
+                                    {id: "1-3-1-1-65", name: "2AA1-6:11 号核心筒客梯 4", extraInfo: "2AA1-6", pds: "1#配电室"},
+                                    {id: "1-3-1-1-66", name: "2AA1-7: 潜污泵 1", extraInfo: "2AA1-7", pds: "1#配电室"},
+                                    {id: "1-3-1-1-67", name: "2AA1-8: 潜污泵 2", extraInfo: "2AA1-8", pds: "1#配电室"},
+                                    {id: "1-3-1-1-68", name: "2AA1-9: 给水泵房 ", extraInfo: "2AA1-9", pds: "1#配电室"}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "1-3-2",
+                        name: "211:4#变压器",
+                        extraInfo: "4AA17-1",
+                        pds: "1#配电室",
+                        children: [
+                            {
+                                id: "1-3-2-1",
+                                name: "404#低压进线四",
+                                extraInfo: "4AA17-1",
+                                pds: "1#配电室",
+                                children: [
+                                    {id: "1-3-2-1-1", name: "4AA13-1: 空调设备 1", extraInfo: "4AA13-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-2", name: "4AA13-2: 空调设备 2", extraInfo: "4AA13-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-3", name: "4AA13-3: 空调设备 3", extraInfo: "4AA13-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-4", name: "4AA13-4: 备用 ", extraInfo: "4AA13-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-5", name: "4AA13-5: 备用 ", extraInfo: "4AA13-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-6", name: "4AA12-1: 空调设备 4", extraInfo: "4AA12-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-7", name: "4AA12-2: 空调设备 5", extraInfo: "4AA12-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-8", name: "4AA12-3: 空调设备 6", extraInfo: "4AA12-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-9", name: "4AA12-4: 备用 ", extraInfo: "4AA12-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-10", name: "4AA12-5: 备用 ", extraInfo: "4AA12-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-11", name: "4AA11-1:15 层厨房 ", extraInfo: "4AA11-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-12", name: "4AA11-2: 备用 ", extraInfo: "4AA11-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-13", name: "4AA11-3: 备用 ", extraInfo: "4AA11-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-14", name: "4AA11-4: 备用 ", extraInfo: "4AA11-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-15", name: "4AA11-5: 备用 ", extraInfo: "4AA11-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-17", name: "4AA9-1:6/7/10/11 号核心筒应急照明 ", extraInfo: "4AA9-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-18", name: "4AA9-2:1 号变配电室 1 号柴发机房 ", extraInfo: "4AA9-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-19", name: "4AA9-3: 一二期消防安防控制室消防设备 (备用)", extraInfo: "4AA9-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-20", name: "4AA9-4: 备用 ", extraInfo: "4AA9-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-21", name: "4AA9-5: 备用 ", extraInfo: "4AA9-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-22", name: "4AA9-6: 备用 ", extraInfo: "4AA9-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-23", name: "4AA9-7: 备用 ", extraInfo: "4AA9-7", pds: "1#配电室"},
+                                    {id: "1-3-2-1-24", name: "4AA8-1: 消防稳压泵 ", extraInfo: "4AA8-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-25", name: "4AA8-2: 消防风机 1", extraInfo: "4AA8-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-26", name: "4AA8-3: 消防风机 2", extraInfo: "4AA8-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-27", name: "4AA8-4: 消防风机 3", extraInfo: "4AA8-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-28", name: "4AA8-5: 消防风机 4", extraInfo: "4AA8-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-29", name: "4AA8-6: 消防风机 5（备用）", extraInfo: "4AA8-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-30", name: "4AA8-7: 备用 ", extraInfo: "4AA8-7", pds: "1#配电室"},
+                                    {id: "1-3-2-1-31", name: "4AA8-8: 备用 ", extraInfo: "4AA8-8", pds: "1#配电室"},
+                                    {id: "1-3-2-1-32", name: "4AA7-1: 消防风机 6", extraInfo: "4AA7-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-33", name: "4AA7-2: 消防风机 7", extraInfo: "4AA7-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-34", name: "4AA7-3: 消防风机 8", extraInfo: "4AA7-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-35", name: "4AA7-4: 消防风机 9", extraInfo: "4AA7-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-36", name: "4AA7-5: 消防风机 10", extraInfo: "4AA7-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-37", name: "4AA7-6: 备用 ", extraInfo: "4AA7-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-38", name: "4AA6-1: 消防水泵房 ", extraInfo: "4AA6-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-39", name: "4AA6-2: 消防潜污泵 1", extraInfo: "4AA6-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-40", name: "4AA6-3: 消防潜污泵 2", extraInfo: "4AA6-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-41", name: "4AA6-4: 消防潜污泵 3", extraInfo: "4AA6-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-42", name: "4AA6-5: 消防潜污泵 4", extraInfo: "4AA6-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-43", name: "4AA6-6: 备用 ", extraInfo: "4AA6-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-44", name: "4AA5-1: 一期和二期网络机房 ", extraInfo: "4AA5-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-45", name: "4AA5-2: 一期和二期网络机房空调（备用）", extraInfo: "4AA5-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-46", name: "4AA5-3: 备用 ", extraInfo: "4AA5-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-47", name: "4AA5-4: 备用 ", extraInfo: "4AA5-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-48", name: "4AA5-5: 备用 ", extraInfo: "4AA5-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-49", name: "4AA4-1: 一期和二期消防安防控制室安防设备 ", extraInfo: "4AA4-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-50", name: "4AA4-2:AIIB 安防存储机房 ", extraInfo: "4AA4-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-51", name: "4AA4-3:AIIB 安防设备机房 ", extraInfo: "4AA4-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-52", name: "4AA4-4: 备用 ", extraInfo: "4AA4-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-53", name: "4AA4-5: 备用 ", extraInfo: "4AA4-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-54", name: "4AA3-1: 弱电 CA 用电 ", extraInfo: "4AA3-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-55", name: "4AA3-2: 弱电 SA 用电 ", extraInfo: "4AA3-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-56", name: "4AA3-3: 弱电 ELV 用电 ", extraInfo: "4AA3-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-57", name: "4AA3-4: 卫星接受机房和卫星通讯机房备用 ", extraInfo: "4AA3-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-58", name: "4AA3-5: 备用 ", extraInfo: "4AA3-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-59", name: "4AA3-6: 备用 ", extraInfo: "4AA3-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-60", name: "4AA2-1: 备用 ", extraInfo: "4AA2-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-61", name: "4AA2-2: 备用 ", extraInfo: "4AA2-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-62", name: "4AA2-3: 消防电梯 1", extraInfo: "4AA2-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-63", name: "4AA2-4: 消防电梯 2", extraInfo: "4AA2-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-64", name: "4AA2-5: 消防电梯 3", extraInfo: "4AA2-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-65", name: "4AA2-6: 消防电梯 4", extraInfo: "4AA2-6", pds: "1#配电室"},
+                                    {id: "1-3-2-1-66", name: "4AA1-1: 电动排烟窗 1（备用）", extraInfo: "4AA1-1", pds: "1#配电室"},
+                                    {id: "1-3-2-1-67", name: "4AA1-2: 电动排烟窗 2（备用）", extraInfo: "4AA1-2", pds: "1#配电室"},
+                                    {id: "1-3-2-1-68", name: "4AA1-3: 热交换站（备用）", extraInfo: "4AA1-3", pds: "1#配电室"},
+                                    {id: "1-3-2-1-69", name: "4AA1-4: 办公区电动窗等（备用）", extraInfo: "4AA1-4", pds: "1#配电室"},
+                                    {id: "1-3-2-1-70", name: "4AA1-5: 备用 ", extraInfo: "4AA1-5", pds: "1#配电室"},
+                                    {id: "1-3-2-1-71", name: "4AA1-6: 备用 ", extraInfo: "4AA1-6", pds: "1#配电室"}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: "2",
+        name: "东区2#配电室",
+        extraInfo: "",
+        pds: "2#配电室",
+        children: [
+            {
+                id: "2-1",
+                name: "201:1#进线柜",
+                extraInfo: "",
+                pds: "2#配电室",
+                children: [
+                    {
+                        id: "2-1-1",
+                        name: "211:1#变压器",
+                        extraInfo: "2-1AA1-1",
+                        pds: "2#配电室",
+                        children: [
+                            {
+                                id: "2-1-1-1",
+                                name: "401:2-1TM变压器进线",
+                                extraInfo: "2-1AA1-1",
+                                pds: "2#配电室",
+                                children: [
+                                    {id: "2-1-1-1-3", name: "1AA6-1:16号核心强电井照明1", extraInfo: "2-1AA6-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-4", name: "1AA6-2:备用", extraInfo: "2-1AA6-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-5", name: "1AA6-3:备用", extraInfo: "2-1AA6-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-6", name: "1AA6-4:备用", extraInfo: "2-1AA6-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-7", name: "1AA7-1:15号核心强电井照明3", extraInfo: "2-1AA7-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-8", name: "1AA7-2:备用", extraInfo: "2-1AA7-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-9", name: "1AA7-3:备用", extraInfo: "2-1AA7-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-10", name: "1AA8-1:12号核心强电井照明5", extraInfo: "2-1AA8-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-11", name: "1AA8-2:备用", extraInfo: "2-1AA8-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-12", name: "1AA8-3:备用", extraInfo: "2-1AA8-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-13", name: "1AA9-1:照明7", extraInfo: "2-1AA9-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-14", name: "1AA9-2:照明8", extraInfo: "2-1AA9-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-15", name: "1AA9-3:多功能厅分区1", extraInfo: "2-1AA9-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-16", name: "1AA9-4:多功能厅分区1", extraInfo: "2-1AA9-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-17", name: "1AA9-5:备用", extraInfo: "2-1AA9-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-18", name: "1AA9-6:备用", extraInfo: "2-1AA9-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-19", name: "1AA9-7:备用", extraInfo: "2-1AA9-7", pds: "2#配电室"},
+                                    {id: "2-1-1-1-20", name: "1AA10-1:备用", extraInfo: "2-1AA10-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-21", name: "1AA10-2:景观照明预留1", extraInfo: "2-1AA10-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-22", name: "1AA10-3:景观照明预留1", extraInfo: "2-1AA10-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-23", name: "1AA10-4:备用", extraInfo: "2-1AA10-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-24", name: "1AA10-5:擦窗机（备用）", extraInfo: "2-1AA10-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-25", name: "1AA10-6:备用", extraInfo: "2-1AA10-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-26", name: "1AA10-7:备用", extraInfo: "2-1AA10-7", pds: "2#配电室"},
+                                    {id: "2-1-1-1-28", name: "1AA11-1:走道照明（备用）", extraInfo: "2-1AA11-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-29", name: "1AA11-2:备用", extraInfo: "2-1AA11-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-30", name: "1AA11-3:北侧首层安检用房", extraInfo: "2-1AA11-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-31", name: "1AA11-4:备用", extraInfo: "2-1AA11-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-32", name: "1AA11-5:备用", extraInfo: "2-1AA11-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-33", name: "1AA11-6:（16号核心筒强电井）办公区重要负荷1", extraInfo: "2-1AA11-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-34", name: "1AA11-7:（16号核心筒强电井）办公区重要负荷2", extraInfo: "2-1AA11-7", pds: "2#配电室"},
+                                    {id: "2-1-1-1-35", name: "1AA11-8:备用", extraInfo: "2-1AA11-8", pds: "2#配电室"},
+                                    {id: "2-1-1-1-36", name: "1AA12-1:（15号核心筒强电井）办公区重要负荷3", extraInfo: "2-1AA12-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-37", name: "1AA12-2:（15号核心筒强电井）办公区重要负荷4", extraInfo: "2-1AA12-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-38", name: "1AA12-3:（12号核心筒强电井）办公区重要负荷5", extraInfo: "2-1AA12-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-39", name: "1AA12-4:（12号核心筒强电井）办公区重要负荷6", extraInfo: "2-1AA12-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-40", name: "1AA12-5:备用", extraInfo: "2-1AA6-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-41", name: "1AA12-6:备用", extraInfo: "2-1AA6-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-42", name: "1AA12-7:备用", extraInfo: "2-1AA6-7", pds: "2#配电室"},
+                                    {id: "2-1-1-1-43", name: "1AA13-1:报告厅同声传译室（备用）", extraInfo: "2-1AA13-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-44", name: "1AA13-2:报告厅声控、光控室（备用）", extraInfo: "2-1AA13-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-45", name: "1AA13-3:报告厅放映室", extraInfo: "2-1AA13-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-46", name: "1AA13-4:报告厅", extraInfo: "2-1AA13-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-47", name: "1AA13-5:备用", extraInfo: "2-1AA13-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-48", name: "1AA13-6:备用", extraInfo: "2-1AA13-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-49", name: "1AA13-7:备用", extraInfo: "2-1AA13-7", pds: "2#配电室"},
+                                    {id: "2-1-1-1-50", name: "1AA13-8:备用", extraInfo: "2-1AA13-8", pds: "2#配电室"},
+                                    {id: "2-1-1-1-51", name: "1AA13-9:备用", extraInfo: "2-1AA13-9", pds: "2#配电室"},
+                                    {id: "2-1-1-1-52", name: "1AA14-1:备用", extraInfo: "2-1AA14-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-53", name: "1AA14-2:12号核心筒北侧客梯4（备用）", extraInfo: "2-1AA14-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-54", name: "1AA14-3:潜污泵（备用）", extraInfo: "2-1AA14-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-55", name: "1AA14-4:厨房冷库（备用）", extraInfo: "2-1AA14-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-56", name: "1AA14-5:备用", extraInfo: "2-1AA14-5", pds: "2#配电室"},
+                                    {id: "2-1-1-1-57", name: "1AA14-6:备用", extraInfo: "2-1AA14-6", pds: "2#配电室"},
+                                    {id: "2-1-1-1-58", name: "1AA15-1:16号核心筒客梯1（备用）", extraInfo: "2-1AA15-1", pds: "2#配电室"},
+                                    {id: "2-1-1-1-59", name: "1AA15-2:16号核心筒客梯2（备用）", extraInfo: "2-1AA15-2", pds: "2#配电室"},
+                                    {id: "2-1-1-1-60", name: "1AA15-3:16号核心筒客梯3（备用）", extraInfo: "2-1AA15-3", pds: "2#配电室"},
+                                    {id: "2-1-1-1-61", name: "1AA15-4:备用", extraInfo: "2-1AA15-4", pds: "2#配电室"},
+                                    {id: "2-1-1-1-62", name: "1AA15-5:备用", extraInfo: "2-1AA15-5", pds: "2#配电室"}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "2-1-2",
+                        name: "212:3#变压器",
+                        extraInfo: "2-3AA1-1",
+                        pds: "2#配电室",
+                        children: [
+                            {
+                                id: "2-1-2-1",
+                                name: "403:2-3TM变压器进线",
+                                extraInfo: "2-3AA1-1",
+                                pds: "2#配电室",
+                                children: [
+                                    {id: "2-1-2-1-3", name: "3AA6-1:充电桩1", extraInfo: "2-3AA6-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-4", name: "3AA6-2:充电桩2", extraInfo: "2-3AA6-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-5", name: "3AA6-3:充电桩3", extraInfo: "2-3AA6-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-6", name: "3AA6-4:充电桩4", extraInfo: "2-3AA6-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-7", name: "3AA6-5:备用", extraInfo: "2-3AA6-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-8", name: "3AA7-1:二层厨房", extraInfo: "2-3AA7-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-9", name: "3AA7-2:空调设备7", extraInfo: "2-3AA7-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-10", name: "3AA7-3:空调设备8", extraInfo: "2-3AA7-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-11", name: "3AA7-4:空调设备12", extraInfo: "2-3AA7-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-12", name: "3AA7-5:备用", extraInfo: "2-3AA7-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-13", name: "3AA7-6:备用", extraInfo: "2-3AA7-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-14", name: "3AA8-1:空调设备9", extraInfo: "2-3AA8-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-15", name: "3AA8-2:空调设备10", extraInfo: "2-3AA8-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-16", name: "3AA8-3:空调设备11", extraInfo: "2-3AA8-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-17", name: "3AA8-4:首层多功能厅餐饮区", extraInfo: "2-3AA8-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-18", name: "3AA8-5:备用", extraInfo: "2-3AA8-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-19", name: "3AA9-1:12号/15号/16号核心筒应急照明（备用）", extraInfo: "2-3AA9-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-20", name: "3AA9-2:2#总配电室3号柴发机房（备用）", extraInfo: "2-3AA9-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-21", name: "3AA9-3:备用", extraInfo: "2-3AA9-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-22", name: "3AA9-4:备用", extraInfo: "2-3AA9-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-23", name: "3AA9-5:备用", extraInfo: "2-3AA9-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-24", name: "3AA9-6:消防风机12（备用）", extraInfo: "2-3AA9-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-25", name: "3AA10-1:消防风机1（备用）", extraInfo: "2-3AA10-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-26", name: "3AA10-2:消防风机2（备用）", extraInfo: "2-3AA10-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-27", name: "3AA10-3:消防风机3（备用）", extraInfo: "2-3AA10-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-28", name: "3AA10-4:消防风机4（备用）", extraInfo: "2-3AA10-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-29", name: "3AA10-5:消防风机5（备用）", extraInfo: "2-3AA10-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-30", name: "3AA10-6:消防风机6（备用）", extraInfo: "2-3AA10-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-31", name: "3AA10-7:消防风机11（备用）", extraInfo: "2-3AA10-7", pds: "2#配电室"},
+                                    {id: "2-1-2-1-32", name: "3AA10-8:备用", extraInfo: "2-3AA10-8", pds: "2#配电室"},
+                                    {id: "2-1-2-1-33", name: "3AA10-9:备用", extraInfo: "2-3AA10-9", pds: "2#配电室"},
+                                    {id: "2-1-2-1-34", name: "3AA11-1:消防风机7（备用）", extraInfo: "2-3AA11-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-35", name: "3AA11-2:消防风机8（备用）", extraInfo: "2-3AA11-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-36", name: "3AA11-3:消防风机9（备用）", extraInfo: "2-3AA11-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-37", name: "3AA11-4:消防风机10（备用）", extraInfo: "2-3AA11-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-38", name: "3AA11-5:消防风机13（备用）", extraInfo: "2-3AA11-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-39", name: "3AA11-6:备用", extraInfo: "2-3AA11-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-40", name: "3AA11-7:备用", extraInfo: "2-3AA11-7", pds: "2#配电室"},
+                                    {id: "2-1-2-1-41", name: "3AA12-1:弱电CA用电（备用）", extraInfo: "2-3AA12-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-42", name: "3AA12-2:弱电SA用电（备用）", extraInfo: "2-3AA12-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-43", name: "3AA12-3:弱电ELV用电（备用）", extraInfo: "2-3AA12-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-44", name: "3AA12-4:防冲撞系统用电（备用）", extraInfo: "2-3AA12-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-45", name: "3AA12-5:备用", extraInfo: "2-3AA12-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-46", name: "3AA12-6:备用", extraInfo: "2-3AA12-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-47", name: "3AA13-1:备用", extraInfo: "2-3AA13-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-48", name: "3AA13-2:中厅电动窗1", extraInfo: "2-3AA13-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-49", name: "3AA13-3:中厅电动窗2", extraInfo: "2-3AA13-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-50", name: "3AA13-4:办公区电动窗等", extraInfo: "2-3AA13-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-51", name: "3AA13-5:消防潜污泵1（备用）", extraInfo: "2-3AA13-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-52", name: "3AA13-6:备用", extraInfo: "2-3AA13-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-53", name: "3AA13-7:备用", extraInfo: "2-3AA13-7", pds: "2#配电室"},
+                                    {id: "2-1-2-1-54", name: "3AA13-8:备用", extraInfo: "2-3AA13-8", pds: "2#配电室"},
+                                    {id: "2-1-2-1-55", name: "3AA14-1:消防潜污泵2（备用）", extraInfo: "2-3AA14-1", pds: "2#配电室"},
+                                    {id: "2-1-2-1-56", name: "3AA14-2:消防潜污泵3（备用）", extraInfo: "2-3AA14-2", pds: "2#配电室"},
+                                    {id: "2-1-2-1-57", name: "3AA14-3:消防电梯1（备用）", extraInfo: "2-3AA14-3", pds: "2#配电室"},
+                                    {id: "2-1-2-1-58", name: "3AA14-4:消防电梯2（备用）", extraInfo: "2-3AA14-4", pds: "2#配电室"},
+                                    {id: "2-1-2-1-59", name: "3AA14-5:消防电梯3（备用）", extraInfo: "2-3AA14-5", pds: "2#配电室"},
+                                    {id: "2-1-2-1-60", name: "3AA14-6:备用", extraInfo: "2-3AA14-6", pds: "2#配电室"},
+                                    {id: "2-1-2-1-61", name: "3AA14-7:备用", extraInfo: "2-3AA14-7", pds: "2#配电室"}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "2-3",
+                name: "202:2#进线柜",
+                extraInfo: "",
+                pds: "2#配电室",
+                children: [
+                    {
+                        id: "2-3-3",
+                        name: "222:4#变压器",
+                        extraInfo: "2-4AA14-1",
+                        pds: "2#配电室",
+                        children: [
+                            {
+                                id: "2-3-3-1",
+                                name: "404:2-4TM变压器进线",
+                                extraInfo: "2-4AA14-1",
+                                pds: "2#配电室",
+                                children: [
+                                    {id: "2-3-3-1-3", name: "4AA10-1:空调设备1", extraInfo: "2-4AA10-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-4", name: "4AA10-2:空调设备2", extraInfo: "2-4AA10-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-5", name: "4AA10-3:空调设备3", extraInfo: "2-4AA10-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-6", name: "4AA10-4:唯美便利店/茶室", extraInfo: "2-4AA10-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-7", name: "4AA10-5:备用", extraInfo: "2-4AA10-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-8", name: "4AA9-1:空调设备4", extraInfo: "2-4AA9-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-9", name: "4AA9-2:空调设备5", extraInfo: "2-4AA9-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-10", name: "4AA9-3:空调设备6", extraInfo: "2-4AA9-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-11", name: "4AA9-4:备用", extraInfo: "2-4AA9-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-12", name: "4AA9-5:备用", extraInfo: "2-4AA9-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-13", name: "4AA9-6:备用", extraInfo: "2-4AA9-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-14", name: "4AA8-1:地下一层厨房4", extraInfo: "2-4AA8-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-15", name: "4AA8-2:地下一层厨房4", extraInfo: "2-4AA8-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-16", name: "4AA8-3:厨房排油烟4", extraInfo: "2-4AA8-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-17", name: "4AA8-4:备用", extraInfo: "2-4AA8-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-18", name: "4AA8-5:备用", extraInfo: "2-4AA8-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-19", name: "4AA7-1:市电/应急电源转换", extraInfo: "2-4AA7-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-20", name: "4AA6-1:12号/15号/16号核心筒应急照明", extraInfo: "2-4AA6-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-21", name: "4AA6-2:2号分界室2#总配电室3号柴发机房", extraInfo: "2-4AA6-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-22", name: "4AA6-3:备用", extraInfo: "2-4AA6-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-23", name: "4AA6-4:备用", extraInfo: "2-4AA6-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-24", name: "4AA6-5:备用", extraInfo: "2-4AA6-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-25", name: "4AA6-6:消防风机12", extraInfo: "2-4AA6-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-26", name: "4AA5-1:消防风机1", extraInfo: "2-4AA5-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-27", name: "4AA5-2:消防风机2", extraInfo: "2-4AA5-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-28", name: "4AA5-3:消防风机3", extraInfo: "2-4AA5-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-29", name: "4AA5-4:消防风机4", extraInfo: "2-4AA5-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-30", name: "4AA5-5:备用", extraInfo: "2-4AA5-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-31", name: "4AA5-6:备用", extraInfo: "2-4AA5-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-32", name: "4AA5-7:消防风机11", extraInfo: "2-4AA5-7", pds: "2#配电室"},
+                                    {id: "2-3-3-1-33", name: "4AA5-8:备用", extraInfo: "2-4AA5-8", pds: "2#配电室"},
+                                    {id: "2-3-3-1-34", name: "4AA5-9:备用", extraInfo: "2-4AA5-9", pds: "2#配电室"},
+                                    {id: "2-3-3-1-35", name: "4AA4-1:备用", extraInfo: "2-4AA4-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-36", name: "4AA4-2:备用", extraInfo: "2-4AA4-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-37", name: "4AA4-3:消防风机9", extraInfo: "2-4AA4-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-38", name: "4AA4-4:消防风机10", extraInfo: "2-4AA4-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-39", name: "4AA4-5:消防风机13", extraInfo: "2-4AA4-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-40", name: "4AA4-6:备用", extraInfo: "2-4AA4-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-41", name: "4AA4-7:备用", extraInfo: "2-4AA4-7", pds: "2#配电室"},
+                                    {id: "2-3-3-1-42", name: "4AA3-1:弱电CA用电", extraInfo: "2-4AA3-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-43", name: "4AA3-2:弱电SA用电", extraInfo: "2-4AA3-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-44", name: "4AA3-3:弱电ELV用电", extraInfo: "2-4AA3-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-45", name: "4AA3-4:防冲撞系统用电", extraInfo: "2-4AA3-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-46", name: "4AA3-5:备用", extraInfo: "2-4AA3-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-47", name: "4AA3-6:备用", extraInfo: "2-4AA3-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-48", name: "4AA2-1:备用", extraInfo: "2-4AA2-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-49", name: "4AA2-2:消防风机1", extraInfo: "2-4AA2-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-50", name: "4AA2-3:消防风机5", extraInfo: "2-4AA2-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-51", name: "4AA2-4:消防风机6", extraInfo: "2-4AA2-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-52", name: "4AA2-5:消防风机7", extraInfo: "2-4AA2-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-53", name: "4AA2-6:消防风机8", extraInfo: "2-4AA2-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-54", name: "4AA2-7:中厅电动窗1（备用）", extraInfo: "2-4AA2-7", pds: "2#配电室"},
+                                    {id: "2-3-3-1-55", name: "4AA2-8:中厅电动窗2（备用）", extraInfo: "2-4AA2-8", pds: "2#配电室"},
+                                    {id: "2-3-3-1-56", name: "4AA1-1:消防潜污泵2", extraInfo: "2-4AA1-1", pds: "2#配电室"},
+                                    {id: "2-3-3-1-57", name: "4AA1-2:消防潜污泵3", extraInfo: "2-4AA1-2", pds: "2#配电室"},
+                                    {id: "2-3-3-1-58", name: "4AA1-3:消防电梯1", extraInfo: "2-4AA1-3", pds: "2#配电室"},
+                                    {id: "2-3-3-1-59", name: "4AA1-4:消防电梯2", extraInfo: "2-4AA1-4", pds: "2#配电室"},
+                                    {id: "2-3-3-1-60", name: "4AA1-5:消防电梯3", extraInfo: "2-4AA1-5", pds: "2#配电室"},
+                                    {id: "2-3-3-1-61", name: "4AA1-6:办公区电动窗等（备用）", extraInfo: "2-4AA1-6", pds: "2#配电室"},
+                                    {id: "2-3-3-1-62", name: "4AA1-7:消防潜污泵1", extraInfo: "2-4AA1-7", pds: "2#配电室"},
+                                    {id: "2-3-3-1-63", name: "4AA1-8:备用", extraInfo: "2-4AA1-8", pds: "2#配电室"}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "2-3-4",
+                        name: "221:2#变压器",
+                        extraInfo: "2-2AA14-1",
+                        pds: "2#配电室",
+                        children: [
+                            {
+                                id: "2-3-4-1",
+                                name: "402:2-2TM变压器进线",
+                                extraInfo: "2-2AA14-1",
+                                pds: "2#配电室",
+                                children: [
+                                    {id: "2-3-4-1-3", name: "2AA10-1:16号核心筒强电井照明2", extraInfo: "2-2AA10-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-4", name: "2AA10-2:备用", extraInfo: "2-2AA10-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-5", name: "2AA10-3:备用", extraInfo: "2-2AA10-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-6", name: "2AA10-4:备用", extraInfo: "2-2AA10-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-7", name: "2AA9-1:（15号核心筒强电井）照明4", extraInfo: "2-2AA9-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-8", name: "2AA9-2:备用", extraInfo: "2-2AA9-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-9", name: "2AA9-3:备用", extraInfo: "2-2AA9-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-10", name: "2AA8-1:（12号核心筒强电井）照明6", extraInfo: "2-2AA8-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-11", name: "2AA8-2:备用", extraInfo: "2-2AA8-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-12", name: "2AA8-3:备用", extraInfo: "2-2AA8-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-13", name: "2AA7-1:多功能厅舞台照明预留", extraInfo: "2-2AA7-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-14", name: "2AA7-2:多功能厅辅助用房", extraInfo: "2-2AA7-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-15", name: "2AA7-3:擦窗机", extraInfo: "2-2AA7-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-16", name: "2AA7-4:多功能厅分区1（备用）", extraInfo: "2-2AA7-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-17", name: "2AA7-5:多功能厅分区2（备用）", extraInfo: "2-2AA7-5", pds: "2#配电室"},
+                                    {id: "2-3-4-1-18", name: "2AA7-6:备用", extraInfo: "2-2AA7-6", pds: "2#配电室"},
+                                    {id: "2-3-4-1-19", name: "2AA7-7:备用", extraInfo: "2-2AA7-7", pds: "2#配电室"},
+                                    {id: "2-3-4-1-20", name: "2AA7-8:备用", extraInfo: "2-2AA7-8", pds: "2#配电室"},
+                                    {id: "2-3-4-1-21", name: "2AA6-1:十点/应急电源转换", extraInfo: "2-2AA6-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-22", name: "2AA5-1:走道照明", extraInfo: "2-2AA5-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-23", name: "2AA5-2:备用", extraInfo: "2-2AA5-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-24", name: "2AA5-3:首层安检用房（备用）", extraInfo: "2-2AA5-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-25", name: "2AA5-4:备用", extraInfo: "2-2AA5-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-26", name: "2AA5-5:备用", extraInfo: "2-2AA5-5", pds: "2#配电室"},
+                                    {id: "2-3-4-1-27", name: "2AA5-6:（16号核心筒强电井）办公区重要负荷1（备用）", extraInfo: "2-2AA5-6", pds: "2#配电室"},
+                                    {id: "2-3-4-1-28", name: "2AA5-7:（16号核心筒强电井）办公区重要负荷2（备用）", extraInfo: "2-2AA5-7", pds: "2#配电室"},
+                                    {id: "2-3-4-1-29", name: "2AA5-8:备用", extraInfo: "2-2AA5-8", pds: "2#配电室"},
+                                    {id: "2-3-4-1-30", name: "2AA4-1:（15号核心筒强电井）办公区重要负荷3（备用）", extraInfo: "2-2AA4-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-31", name: "2AA4-2:（15号核心筒强电井）办公区重要负荷4（备用）", extraInfo: "2-2AA4-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-32", name: "2AA4-3:（15号核心筒强电井）办公区重要负荷5（备用）", extraInfo: "2-2AA4-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-33", name: "2AA4-4:（15号核心筒强电井）办公区重要负荷6（备用）", extraInfo: "2-2AA4-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-34", name: "2AA4-5:备用", extraInfo: "2-2AA4-5", pds: "2#配电室"},
+                                    {id: "2-3-4-1-35", name: "2AA4-6:备用", extraInfo: "2-2AA4-6", pds: "2#配电室"},
+                                    {id: "2-3-4-1-36", name: "2AA4-7:备用", extraInfo: "2-2AA4-7", pds: "2#配电室"},
+                                    {id: "2-3-4-1-37", name: "2AA3-1:报告厅同声传译室", extraInfo: "2-2AA3-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-38", name: "2AA3-2:报告厅声控、光控室（备用）", extraInfo: "2-2AA3-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-39", name: "2AA3-3:报告厅放映室（备用）", extraInfo: "2-2AA3-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-40", name: "2AA3-4:报告厅（备用）", extraInfo: "2-2AA3-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-41", name: "2AA3-5:备用", extraInfo: "2-2AA3-5", pds: "2#配电室"},
+                                    {id: "2-3-4-1-42", name: "2AA3-6:备用", extraInfo: "2-2AA3-6", pds: "2#配电室"},
+                                    {id: "2-3-4-1-43", name: "2AA3-7:备用", extraInfo: "2-2AA3-7", pds: "2#配电室"},
+                                    {id: "2-3-4-1-44", name: "2AA3-8:备用", extraInfo: "2-2AA3-8", pds: "2#配电室"},
+                                    {id: "2-3-4-1-45", name: "2AA3-9:备用", extraInfo: "2-2AA3-9", pds: "2#配电室"},
+                                    {id: "2-3-4-1-46", name: "2AA2-1:备用", extraInfo: "2-2AA2-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-47", name: "2AA2-2:12号核心筒北侧客梯4", extraInfo: "2-2AA2-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-48", name: "2AA2-3:潜污泵", extraInfo: "2-2AA2-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-49", name: "2AA2-4:厨房冷库", extraInfo: "2-2AA2-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-50", name: "2AA2-5:备用", extraInfo: "2-2AA2-5", pds: "2#配电室"},
+                                    {id: "2-3-4-1-51", name: "2AA2-6:备用", extraInfo: "2-2AA2-6", pds: "2#配电室"},
+                                    {id: "2-3-4-1-52", name: "2AA1-1:16号核心筒侧客梯1", extraInfo: "2-2AA1-1", pds: "2#配电室"},
+                                    {id: "2-3-4-1-53", name: "2AA1-2:16号核心筒侧客梯2", extraInfo: "2-2AA1-2", pds: "2#配电室"},
+                                    {id: "2-3-4-1-54", name: "2AA1-3:16号核心筒侧客梯3", extraInfo: "2-2AA1-3", pds: "2#配电室"},
+                                    {id: "2-3-4-1-55", name: "2AA1-4:备用", extraInfo: "2-2AA1-4", pds: "2#配电室"},
+                                    {id: "2-3-4-1-56", name: "2AA1-5:备用", extraInfo: "2-2AA1-5", pds: "2#配电室"}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {   
+        id: "3",
+        name: "东区6#配电室",
+        extraInfo: "",
+        pds: "6#配电室",
+        children: [
+            {
+                id: "3-1",
+                name: "211:1#变压器",
+                extraInfo:"6-1AA1-1",
+                pds: "6#配电室",
+                children: [
+                    {
+                        id: "3-1-1",
+                        name: "401:6-1TM变压器进线",
+                        extraInfo:"6-1AA1-1",
+                        pds: "6#配电室",
+                        children: [
+                            {id: "3-1-1-3", name: '1AA6-1:一二期双工况变频离心机组1', extraInfo:"6-1AA6-1", pds: "6#配电室",},
+                            {id: "3-1-1-4", name: '1AA7-1:一二期变频离心式冷水机组1', extraInfo:"6-1AA7-1", pds: "6#配电室",},
+                            {id: "3-1-1-5", name: '1AA8-1:空调设备1', extraInfo:"6-1AA8-1", pds: "6#配电室",},
+                            {id: "3-1-1-6", name: '1AA8-2:空调设备2', extraInfo:"6-1AA8-2", pds: "6#配电室",},
+                            {id: "3-1-1-7", name: '1AA8-3:备用', extraInfo:"6-1AA8-3", pds: "6#配电室",},
+                            {id: "3-1-1-8", name: '1AA8-4:备用', extraInfo:"6-1AA8-4", pds: "6#配电室",},
+                            {id: "3-1-1-9", name: '1AA8-5:备用', extraInfo:"6-1AA8-5", pds: "6#配电室",},
+                            {id: "3-1-1-10", name: '1AA9-1:一二期制冷机房控制室配电柜', extraInfo:"6-1AA9-1", pds: "6#配电室",},
+                            {id: "3-1-1-11", name: '1AA10-1:一、二期网络及用户冷却水水泵房控制室配电柜', extraInfo:"6-1AA10-1", pds: "6#配电室",},
+                            {id: "3-1-1-12", name: '1AA10-2:却水水泵房控制室配电柜（备用）', extraInfo:"6-1AA10-2", pds: "6#配电室",},
+                            {id: "3-1-1-13", name: '1AA10-3:备用', extraInfo:"6-1AA10-3", pds: "6#配电室",},
+                            {id: "3-1-1-14", name: '1AA10-4:6#分配电室', extraInfo:"6-1AA10-4", pds: "6#配电室",},
+                            {id: "3-1-1-15", name: '1AA10-5:备用', extraInfo:"6-1AA10-5", pds: "6#配电室",},
+                            // {id: "3-1-1-16", name: '1AA5-1:有源滤波柜', extraInfo:"1AA5-1", pds: "6#配电室",}
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "3-6",
+                name: "221:2#变压器",
+                extraInfo:"6-2AA11-1",
+                pds: "6#配电室",
+                children: [
+                    {
+                        id: "3-6-1",
+                        name: "402:6-2TM变压器进线",
+                        extraInfo:"6-2AA11-1",
+                        pds: "6#配电室",
+                        children: [
+                            {id: "3-6-1-3", name: '2AA7-1:一二期双工况变频离心机组2', extraInfo:"6-2AA7-1", pds: "6#配电室",},
+                            {id: "3-6-1-4", name: '2AA6-1:一二期变频离心式冷水机组2', extraInfo:"6-2AA6-1", pds: "6#配电室",},
+                            {id: "3-6-1-5", name: '2AA5-1:一二期制冷机房控制室', extraInfo:"6-2AA5-1", pds: "6#配电室",},
+                            {id: "3-6-1-6", name: '2AA4-1:一二期冷却塔配电柜', extraInfo:"6-2AA4-1", pds: "6#配电室",},
+                            {id: "3-6-1-7", name: '2AA4-2:备用', extraInfo:"6-2AA4-2", pds: "6#配电室",},
+                            {id: "3-6-1-8", name: '2AA4-3:备用', extraInfo:"6-2AA4-3", pds: "6#配电室",},
+                            {id: "3-6-1-9", name: '2AA4-4:备用', extraInfo:"6-2AA4-4", pds: "6#配电室",},
+                            {id: "3-6-1-10", name: '2AA4-5:冷却塔电加热柜', extraInfo:"6-2AA4-5", pds: "6#配电室",},
+                            {id: "3-6-1-11", name: '2AA3-1:备用', extraInfo:"6-2AA3-1", pds: "6#配电室",},
+                            {id: "3-6-1-12", name: '2AA3-2:备用', extraInfo:"6-2AA3-2", pds: "6#配电室",},
+                            {id: "3-6-1-13", name: '2AA3-3:备用', extraInfo:"6-2AA3-3", pds: "6#配电室",},
+                            {id: "3-6-1-14", name: '2AA3-4:备用', extraInfo:"6-2AA3-4", pds: "6#配电室",},
+                            {id: "3-6-1-15", name: '2AA3-5:备用', extraInfo:"6-2AA3-5", pds: "6#配电室",},
+                            {id: "3-6-1-16", name: '2AA2-1:市电/备用电源转换', extraInfo:"6-2AA2-1", pds: "6#配电室",},
+                            {id: "3-6-1-17", name: '2AA1-1:一、二期网络及用户冷却水水泵房控制室配电柜1（备用）', extraInfo:"6-2AA1-1", pds: "6#配电室",},
+                            {id: "3-6-1-18", name: '2AA1-2:一、二期网络及用户冷却水水泵房控制室配电柜1（备用）', extraInfo:"6-2AA1-2", pds: "6#配电室",},
+                            {id: "3-6-1-19", name: '2AA1-3:备用', extraInfo:"6-2AA1-3", pds: "6#配电室",},
+                            {id: "3-6-1-20", name: '2AA1-4:6#分配电室', extraInfo:"6-2AA1-4", pds: "6#配电室",},
+                            {id: "3-6-1-21", name: '2AA1-5:备用', extraInfo:"6-2AA1-5", pds: "6#配电室",},
+                            {id: "3-6-1-22", name: '2AA8-1:有源滤波柜', extraInfo:"6-2AA8-1", pds: "6#配电室",}
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: "4",
+        name: "散表",
+        extraInfo: "",
+        children: [
+            {
+                id: "hash_1_6",
+                name: "1、6号配电室电力分割散表",
+                extraInfo: "",
+                children: [
+                    {
+                        id: "hash_1_6_1",
+                        name: "(16)AL-B1-1:地下室照明照明",
+                        extraInfo: "(16)AL-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_2",
+                        name: "(17)AL-B1-1:地下室照明照明",
+                        extraInfo: "(17)AL-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_3",
+                        name: "(18)AL-B1-1:地下室照明照明",
+                        extraInfo: "(18)AL-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_4",
+                        name: "(12)AL-B1-2:地下室照明照明",
+                        extraInfo: "(12)AL-B1-2",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_5",
+                        name: "(15)AL-B1-1:地下室照明照明",
+                        extraInfo: "(15)AL-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_6",
+                        name: "(14)AL-B1-1:地下室照明照明",
+                        extraInfo: "(14)AL-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_7",
+                        name: "(17)ALT-B1-G1:地下室走道照明2",
+                        extraInfo: "(17)ALT-B1-G1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_8",
+                        name: "(14)ALT-B1-G1:走道照明",
+                        extraInfo: "(14)ALT-B1-G1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_9",
+                        name: "(18)ALT-B1-G1:走道照明",
+                        extraInfo: "(18)ALT-B1-G1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_10",
+                        name: "(19)ALT-B1-G2:走道照明",
+                        extraInfo: "(19)ALT-B1-G2",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_11",
+                        name: "(15)ALT-B1-G1:走道照明",
+                        extraInfo: "(15)ALT-B1-G1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_12",
+                        name: "(12)ALT-B1-G2:走道照明",
+                        extraInfo: "(12)ALT-B1-G2",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_13",
+                        name: "1AP-B2-F3:空调设备12",
+                        extraInfo: "1AP-B2-F3",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_14",
+                        name: "14AP-B2-F1:空调设备12",
+                        extraInfo: "14AP-B2-F1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_15",
+                        name: "3AP-B2-F4:空调设备12",
+                        extraInfo: "3AP-B2-F4",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_16",
+                        name: "(25)AP-B1-F1:空调设备13",
+                        extraInfo: "(25)AP-B1-F1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_17",
+                        name: "(12)ALE-B1-2:消防应急照明",
+                        extraInfo: "(12)ALE-B1-2",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_18",
+                        name: "(14)ALE-B1-1:消防应急照明",
+                        extraInfo: "(14)ALE-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_19",
+                        name: "(16)ALE-B1-1:消防应急照明",
+                        extraInfo: "(16)ALE-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_20",
+                        name: "(17)ALE-B1-1:消防应急照明",
+                        extraInfo: "(17)ALE-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_21",
+                        name: "(15)ALE-B1-1:消防应急照明",
+                        extraInfo: "(15)ALE-B1-1",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_22",
+                        name: "11AT-B1-CA:弱电CA用电",
+                        extraInfo: "11AT-B1-CA",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_23",
+                        name: "6AT-B1-CA:弱电CA用电",
+                        extraInfo: "6AT-B1-CA",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_24",
+                        name: "7AT-B1-CA:弱电CA用电",
+                        extraInfo: "7AT-B1-CA",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_1_6_25",
+                        name: "10AT-B1-CA:弱电CA用电",
+                        extraInfo: "10AT-B1-CA",
+                        pds: "1#配电室"
+                    },
+                    {
+                        id: "hash_2_26",
+                        name: "(10)AT-1-AJ:西安检用电",
+                        extraInfo: "(10)AT-1-AJ",
+                        pds: "6#配电室"
+                    }
+                ]
+            },
+            {
+                id: "hash_2",
+                name: "2号配电室电力分割散表",
+                extraInfo: "",
+                children: [
+                    {
+                        id: "hash_2_27",
+                        name: "景观照明:B1北外环廊(吸烟亭)",
+                        extraInfo: "JG",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_28",
+                        name: "(26)AP-B1-F2:B1北外环廊(吸烟亭)",
+                        extraInfo: "(26)AP-B1-F2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_29",
+                        name: "(27)APE-B1-F1:B1北外环廊(吸烟亭)",
+                        extraInfo: "(27)APE-B1-F1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_30",
+                        name: "AC-B1-1:B1北外环廊(东北角)",
+                        extraInfo: "AC-B1-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_31",
+                        name: "(21)APE-B1-F4:配电值班室",
+                        extraInfo: "(21)APE-B1-F4",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_32",
+                        name: "(5)ALE-B1-1:B1层5筒强电库房",
+                        extraInfo: "(5)ALE-B1-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_33",
+                        name: "(20)AL-B1-2:B1层5筒强电库房",
+                        extraInfo: "(20)AL-B1-2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_34",
+                        name: "(20)APE-B1-F1:B1层5筒强电库房",
+                        extraInfo: "(20)APE-B1-F1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_35",
+                        name: "15AL-B1-1:5筒B1层强电间",
+                        extraInfo: "15AL-B1-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_36",
+                        name: "15ALE-B1-1:5筒B1层强电间",
+                        extraInfo: "15ALE-B1-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_37",
+                        name: "15AL-B2-1:5筒B2层强电间",
+                        extraInfo: "15AL-B2-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_38",
+                        name: "16AL-B2-1:B2-6筒强电间",
+                        extraInfo: "16AL-B2-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_39",
+                        name: "11AP-B2-F3:B2层工程库房",
+                        extraInfo: "11AP-B2-F3",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_40",
+                        name: "11APE-B2-F2:B2-5筒北侧排风机房",
+                        extraInfo: "11APE-B2-F2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_41",
+                        name: "16APE-B3-F1:B3-6筒西侧排风机房",
+                        extraInfo: "16APE-B3-F1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_42",
+                        name: "16APE-B3-F2:B3-6筒南侧排风机房",
+                        extraInfo: "16APE-B3-F2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_43",
+                        name: "16APE-B3-J1:B3层5-6筒强电间",
+                        extraInfo: "16APE-B3-J1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_44",
+                        name: "15APE-B3-J1:B3-5筒南侧强电间",
+                        extraInfo: "15APE-B3-J1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_45",
+                        name: "ALE-B3-RF8:B3-5筒南侧强电间",
+                        extraInfo: "ALE-B3-RF8",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_46",
+                        name: "15APE-B3-F1:B3-5筒南侧风机房",
+                        extraInfo: "15APE-B3-F1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_47",
+                        name: "15APE-B3-F2:B3-5筒北侧风机房",
+                        extraInfo: "15APE-B3-F2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_48",
+                        name: "ALE-B3-RF9-2:B3-6筒西侧强电间",
+                        extraInfo: "ALE-B3-RF9-2",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_49",
+                        name: "ALE-B3-RF9-1:B3-6筒西侧强电间",
+                        extraInfo: "ALE-B3-RF9-1",
+                        pds: "2#配电室"
+                    },
+                    {
+                        id: "hash_2_50",
+                        name: "APE-B3-RF9-W1:B3-6筒西侧",
+                        extraInfo: "APE-B3-RF9-W1",
+                        pds: "2#配电室"
+                    }
+
+                ]
+            }
+        ]
+    }
+];
+
+    // 树形结构渲染函数
+    function renderTree(data, container, parentNode = null) {
+        // 容错处理：确保数据和容器有效
+        if (!data || !Array.isArray(data) || !container) return;
+        
+        container.innerHTML = '';
+        
+            
+        // 如果有父节点且当前节点有子项，添加全选开关
+        if (parentNode && data.length > 0) {
+            const checkAllContainer = document.createElement('div');
+            checkAllContainer.className = 'checkbox-container';
+            checkAllContainer.innerHTML = `
+                <div class="node-checkbox" data-check-all></div>
+                <div class="check-all-text">全选</div>
+            `;
+            container.appendChild(checkAllContainer);
+            
+            // 全选事件
+            const checkAllCheckbox = checkAllContainer.querySelector('[data-check-all]');
+            checkAllCheckbox.addEventListener('click', function() {
+                this.classList.toggle('checked');
+                const isChecked = this.classList.contains('checked');
+                
+                // 选择当前层级子节点复选框
+                const childCheckboxes = container.querySelectorAll('.tree-node > .node-content > .node-checkbox');
+                
+                childCheckboxes.forEach(checkbox => {
+                    if (isChecked) {
+                        checkbox.classList.add('checked');
+                        checkbox.setAttribute('data-checked', 'true');
+                    } else {
+                        checkbox.classList.remove('checked');
+                        checkbox.setAttribute('data-checked', 'false');
+                    }
+                });
+            });
+        }
+        
+        data.forEach(node => {
+            // 节点数据容错
+            if (!node) return;
+            
+            // 创建节点容器
+            const nodeEl = document.createElement('div');
+            nodeEl.className = 'tree-node';
+            nodeEl.dataset.id = node.id || 'node-' + Date.now(); // 确保有唯一ID
+            nodeEl.dataset.node = JSON.stringify(node);
+            
+            // 节点标题容错处理
+            const nodeTitle = node.title || node.name || `未命名节点(${node.id || ''})`;
+            
+            // 节点内容结构
+            nodeEl.innerHTML = `
+                <div class="node-content">
+                    <div class="node-checkbox" data-node-id="${node.id || ''}" data-checked="false"></div>
+                    <div class="node-icon">${node.children && node.children.length ? '+' : ''}</div>
+                    <div class="node-info">
+                        <div class="node-title">${nodeTitle}</div>
+                    </div>
+                </div>
+                <div class="tree-children"></div>
+            `;
+            
+            container.appendChild(nodeEl);
+            
+            // 递归渲染子节点
+            if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+                const childrenContainer = nodeEl.querySelector('.tree-children');
+                const iconEl = nodeEl.querySelector('.node-icon');
+
+                // 默认展开：id 为 1/2/3/4，或节点自身 open === true
+                const defaultOpenIds = ['1', '2', '3', '4', 1, 2, 3, 4];
+                const shouldOpen = defaultOpenIds.includes(node.id) || node.open === true;
+
+                if (shouldOpen) {
+                    nodeEl.classList.add('open');
+                    childrenContainer.style.display = 'block';
+                    iconEl.textContent = '-';
+                } else {
+                    childrenContainer.style.display = 'none';
+                    iconEl.textContent = '+';
+                }
+
+                renderTree(node.children, childrenContainer, node);
+
+                iconEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    nodeEl.classList.toggle('open');
+                    childrenContainer.style.display = nodeEl.classList.contains('open') ? 'block' : 'none';
+                    iconEl.textContent = nodeEl.classList.contains('open') ? '-' : '+';
+                });
+            }
+
+            // 节点复选框事件
+            const nodeCheckbox = nodeEl.querySelector('.node-checkbox');
+            nodeCheckbox.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isChecked = !nodeCheckbox.classList.contains('checked');
+                if (isChecked) {
+                    nodeCheckbox.classList.add('checked');
+                    nodeCheckbox.setAttribute('data-checked', 'true');
+                } else {
+                    nodeCheckbox.classList.remove('checked');
+                    nodeCheckbox.setAttribute('data-checked', 'false');
+                }
+            });
+            
+            // 节点点击事件
+            nodeEl.querySelector('.node-content').addEventListener('click', () => {
+                document.querySelectorAll('.tree-node').forEach(el => el.classList.remove('active'));
+                nodeEl.classList.add('active');
+            });
+        });
+    }
+
+    // 初始化树形菜单 - 确保DOM加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        // 查找树形容器
+        const treeRoot = document.getElementById('treeRoot');
+        
+        // 容器存在性检查
+        if (!treeRoot) {
+            console.error('未找到树形结构容器，请确保存在id为"treeRoot"的元素');
+            return;
+        }
+        
+        // 渲染树形菜单
+        window.initEnergyTree().catch(function(e){ treeRoot.textContent='树结构加载失败：'+e.message; }); 
+
+        // 查询按钮事件
+        const chaxunBtn = document.getElementById('chaxun');
+        if (chaxunBtn) {
+            chaxunBtn.addEventListener('click', function() {
+                selectedNodesInfo = []; // 清空之前的选择
+                let skippedCount = 0; // 记录跳过的节点数量
+
+                selectedNodesInfo = window.getEnergySelectedNodes ? window.getEnergySelectedNodes() : [];
+
+                if (skippedCount > 0) {
+                    layui.layer.msg(`已自动跳过${skippedCount}个无数据的节点`, {icon: 1, time: 2000});
+                }
+
+                if (selectedNodesInfo.length === 0) {
+                    if (window.layer) {
+                        layer.msg('请至少选择一个节点', {icon: 3});
+                    } else {
+                        alert('请至少选择一个节点');
+                    }
+                    return;
+                }
+                
+                const cmsname = selectedNodesInfo.map(node => node.extraInfo);
+                console.log('选中节点:', cmsname);
+                
+                // 日期处理
+                const startDateValue = document.getElementById('startDate')?.value;
+                const startTimeValue = document.getElementById('endDate')?.value;
+                const endDateValue = document.getElementById('startDates')?.value;
+                const endTimeValue = document.getElementById('endDates')?.value;
+
+                function normalizeDateTime(dateStr, timeStr) {
+                    if (!dateStr || !timeStr) return '';
+
+                    const timeParts = timeStr.split(':');
+                    const hour = (timeParts[0] || '00').padStart(2, '0');
+                    const minute = (timeParts[1] || '00').padStart(2, '0');
+
+                    const minuteNumber = parseInt(minute, 10);
+                    if (Number.isNaN(minuteNumber)) return '';
+
+                    const minuteTens = Math.floor(parseInt(minute, 10) / 10) * 10;
+                    const normalizedMinute = String(minuteTens).padStart(2, '0');
+
+                    return `${dateStr} ${hour}:${normalizedMinute}:00`;
+                }
+
+                const startDate = normalizeDateTime(startDateValue, startTimeValue);
+                const endDate = normalizeDateTime(endDateValue, endTimeValue);
+
+
+                if (!startDate || !endDate) {
+                    if (window.layer) {
+                        layer.msg('请选择完整的日期范围', {icon: 3});
+                    } else {
+                        alert('请选择完整的日期范围');
+                    }
+                    return;
+                }
+                const pdsMap = {};
+                selectedNodesInfo.forEach(node => {
+                    pdsMap[node.extraInfo] = node.pds || '';
+                });
+
+                // AJAX请求
+                if (window.$) {
+                    $.ajax({
+                        // url: 'http://192.168.1.227:8081/hdb/getnhtj',
+                        url: '/hdb/getnhtj',
+                        method: 'POST',
+                        data: { cmsname, startDate, endDate, pdsMapJson: JSON.stringify(pdsMap) },
+                        success: function(data) {
+                            console.log('接口返回数据:', data);
+                            // 将选中的节点名称添加到返回数据中
+                            if (data && data.length) {
+                                const selectedNodeNameMap = {};
+                                selectedNodesInfo.forEach(node => {
+                                    selectedNodeNameMap[node.extraInfo] = node.name;
+                                });
+
+                                data.forEach(item => {
+                                    item.电表名称 = selectedNodeNameMap[item.name] || item.name || '';
+                                });
+                            }
+                            xrbg(data);
+                        },
+                        error: function(xhr) {
+                            if (window.layer) {
+                                layer.msg('请求失败，请重试', {icon: 2});
+                            } else {
+                                alert('请求失败，请重试');
+                            }
+                            console.error('请求错误:', xhr);
+                        }
+                    });
+                } else {
+                    console.error('未找到jQuery，请确保已引入');
+                }
+            });
+        } else {
+            console.error('未找到查询按钮，请确保存在id为"chaxun"的元素');
+        }
+    });
+
+    // 渲染表格的方法
+    function xrbg(cms) {
+        if (window.layui && layui.table) {
+            layui.use(['table','layer'], function () {
+                const table = layui.table;
+                table.render({
+                    elem: '#deviceTable',
+                    data: cms || [],
+                    cols: [
+                        [
+                            { type: 'numbers', title: '序号', width: 50 },
+                            { field: '电表名称', title: '电表名称', width: 250 },
+                            { field: '配电室', title: '配电室', width: 120 },
+                            { field: '起始日期', title: '起始日期', width: 180 },
+                            { field: '起始表读', title: '起始表读', width: 120 },
+                            { field: '结束日期', title: '结束日期', width: 180 },
+                            { field: '结束表读', title: '结束表读', width: 120 },
+                            { field: '采电量(kWh)', title: '采电量(kWh)', width: 140 }
+                        ]
+                    ],
+                    page: true,
+                    limit: 50, // 设置默认每页显示20条
+                    limits: [10, 20, 50, 100], // 配置可选的每页条数
+                    done: function() {
+                        if (window.layer) {
+                            layer.msg('数据加载完成', {icon: 1, time: 1000});
+                        }
+                    },
+                });
+                // 给导出按钮添加点击事件
+                document.getElementById('exportBtn').addEventListener('click', function() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const fileName = `${year}-${month}-${day}_${hours}:${minutes}:${seconds}抄表数据.xlsx`;
+
+                    // 检查是否有数据
+                    if (!cms || cms.length === 0) {
+                        layer.msg('没有数据可导出', {icon: 3});
+                        return;
+                    }
+
+                    // 使用ExcelJS创建 workbook
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('能耗数据');
+
+                    // 设置列宽
+                    worksheet.columns = [
+                        { header: '序号', key: 'index', width: 8 },
+                        { header: '电表名称', key: 'name', width: 25 },
+                        { header: '配电室', key: 'room', width: 15 },
+                        { header: '起始日期', key: 'startDate', width: 22 },
+                        { header: '起始表读', key: 'startReading', width: 12 },
+                        { header: '结束日期', key: 'endDate', width: 22 },
+                        { header: '结束表读', key: 'endReading', width: 12 },
+                        { header: '采电量(kWh)', key: 'total', width: 15 }
+                    ];
+
+
+                    // 添加表头样式
+                    worksheet.getRow(1).font = { bold: true };
+                    worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+                    // 添加数据行
+                    cms.forEach((item, index) => {
+                        worksheet.addRow({
+                            index: index + 1,
+                            name: item.电表名称 || item.name || '',
+                            room: item.配电室 || '',
+                            startDate: item.起始日期 || '',
+                            startReading: item.起始表读 || '',
+                            endDate: item.结束日期 || '',
+                            endReading: item.结束表读 || '',
+                            total: item['采电量(kWh)'] || ''
+                        });
+                    });
+
+                    // 导出文件
+                    workbook.xlsx.writeBuffer().then(function(buffer) {
+                        saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName);
+                        layer.msg('导出成功', {icon: 1});
+                    }).catch(function(error) {
+                        console.error('导出失败:', error);
+                        layer.msg('导出失败，请重试', {icon: 2});
+                    });
+                });
+            });
+        } else {
+            console.error('未找到layui或table模块，请确保已正确引入');
+        }
+    }
+
+
+
+</script>
+
+
+<div id="overlay" class="energy-overlay"><section class="energy-dialog" role="dialog" aria-modal="true"><div class="energy-dialog-head"><strong id="dialogTitle"></strong><button id="close" type="button">×</button></div><div id="dialogBody" class="energy-dialog-body"></div><div id="dialogFooter" class="energy-dialog-footer"></div></section></div><div id="toast" class="energy-toast"></div>
+<link rel="stylesheet" href="/static/cms/css/energy-tree.css">
+<script src="/dljk/treedata.js"></script><script src="/static/cms/js/energy-tree.js?v=20261110-3"></script>
+</body>
+</html>

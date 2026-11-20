@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>日统计报表</title>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="../../static/ExcelJS/exceljs.min.js"></script>
+    <script src="../../static/ExcelJS/FileSaver.min.js"></script>
+    <style>
+        #title_rtj{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*border: 1px solid #c7c7c5;*/
+
+        }
+        #body_rtj{
+            width: 100%;
+            height: 670px;
+            /*background-color: #0e73f3;*/
+        }
+        #rtj_unit1{
+            width: 100%;
+            height: 40px;
+            display: flex;
+            /*margin-top: 10px;*/
+            /*background-color: #0e73f3;*/
+        }
+        label,input{
+            display: flex;
+            align-items:center;
+            margin-left: 10px;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+        button{
+            margin-top: 5px;
+        }
+        #rtj_unit2{
+            width: 95%;
+            height: 620px;
+            margin-top: 10px;
+            margin-left:8px ;
+            border: 1px solid black;
+        }
+        #unit2_1{
+            width: 100%;
+            text-align: center;
+            /*display: flex;*/
+            /*align-items:center;*/
+            height: 30px;
+            padding-top: 5px;
+            border-bottom: 1px solid black;
+            /*background-color: black;*/
+        }
+        #unit2_2{
+            width: 100%;
+            height: 30px;
+            /*padding-top: 5px;*/
+            border-bottom: 1px solid black;
+            display: flex;
+        }
+        #unit2_2_1{
+            width: 49%;
+            padding-top: 5px;
+            padding-left: 10px;
+            border-right: 1px solid black;
+        }
+        #unit2_2_2{
+            text-align:right;
+            width: 49%;
+            padding-top: 5px;
+        }
+        #unit2_3{
+            width: 100%;
+            height: 570px;
+            display: flex;
+            /*background-color: black;*/
+        }
+        #unit2_3_1{
+            width: 500px;
+            height: 552px;
+            /*background-color: black;*/
+        }
+        .layui-table  th{
+            background-color: #e3e3e3;
+        }
+        #unit2_3_2{
+            width: 950px;
+            height: 552px;
+            /*background-color: #e51b1b;*/
+        }
+        #unit2_3_2_1{
+            width: 100%;
+            height: 428px;
+            /*background-color: #0e73f3;*/
+        }
+        .clwzxlk{
+            width: 380px;
+            height: 500px;
+            position: absolute;
+            left: 80px;
+            top: 77px;
+            border: 1px solid black;
+            background-color: #fdfdfe;
+            display: none;
+            /*background-color: black;*/
+        }
+        .layui-tree-line {
+            height: 500px; /* 假设容器高度为300px */
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        .layui-select-title{
+            width: 400px;
+            height: 34px;
+            /*border: 2px solid rgba(24,24,24,0.98);*/
+            margin-left: 10px;
+        }
+    </style>
+    <script src="treedata.js"></script>
+</head>
+<body>
+
+<div id="title_rtj">&nbsp;&nbsp;&nbsp;日统计报表</div>
+<div id="body_rtj">
+    <div id="rtj_unit1">
+        <label>测量位置</label>
+        <input type="text" id="pds" onclick="clwzdj()" value="401:2低压进线一" class="layui-input" style="width: 200px;   ">
+        <label>日期</label>
+        <input type="text"  class="layui-input layui_timedate"   id="test1" style="width: 200px;">
+
+        <button type="button" onclick="rchaxun()" class="layui-btn">查询</button>
+        <button type="button" onclick="rdaochu()" class="layui-btn">导出</button>
+    </div>
+    <div id="rtj_unit2">
+        <div id="unit2_1" >亚投行1#配电室 2024-12-17 日电量统计报表</div>
+        <div id="unit2_2">
+            <div id="unit2_2_1">用电单位:北京亚洲金融大厦</div>
+            <div id="unit2_2_2">制表时间: 2025-9-22</div>
+        </div>
+        <div id="unit2_3">
+            <div id="unit2_3_1">
+                <div id="2_3_1table"></div>
+            </div>
+            <div id="unit2_3_2">
+                <div id="unit2_3_2_1">
+
+                </div>
+                <div id="unit2_3_2_2">
+                    <div id="2_3_2_2table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="rtj_unit3"></div>
+</div>
+
+<div style="" class="clwzxlk" id="navTree"></div>
+<script>
+
+    $ =layui.jquery;    // 简化后的导航数据
+    // 树形菜单数据
+
+    var chuanshuneir ="";
+    layui.use('tree', function(){
+        const tree = layui.tree;
+        const layer = layui.layer;
+
+        tree.render({
+            elem: '#navTree',
+            data: treedata,
+            showLine: true,
+            className: 'custom-tree-class',
+            click: function (obj) {
+                document.getElementById('pds').value=obj.data.title;
+                chuanshuneir =obj.data.extraInfo;
+                console.log(chuanshuneir);
+                document.getElementById("navTree").style.display ='none';
+            },
+            accordion: true //开启手风琴效果
+        });
+    });
+    layui.use([ 'form', 'laydate'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var dateType = 'day';
+        //执行一个laydate实例
+        laydate.render({
+            elem: '.layui_timedate' //指定时间元素
+        });
+
+        form.render('select');
+    });
+    function clwzdj(){
+        document.getElementById("navTree").style.display ='block';
+    }
+    document.addEventListener('click', function (event) {
+        const target = event.target;
+        if (target.id !== 'pds' && !target.classList.contains('layui-icon')) {
+            // 在此处添加点击物体class不为aaa时要执行的代码
+            document.getElementById("navTree").style.display ='none';
+        }
+    });
+
+    function xrbg(riqiData, ygData, wgData) {
+        layui.use('table', function () {
+
+            var table = layui.table;
+            table.render({
+                elem: '#2_3_1table',
+                cols: [[
+                    {field: 'number', title: '时间', style: 'background-color: #e3e3e3;'},
+                    {field: 'power', title: '电量(KWh)' },
+                    {field: 'proportion', title: '时间', style: 'background-color: #e3e3e3;'},
+                    {field: 'loadRate', title: '电量(KWh)'}
+                ]],
+                data: riqiData
+            });
+            table.render({
+                elem: '#2_3_2_2table',
+                cols: [[
+                    {field: 'number', title: '用电分类', style: 'background-color: #e3e3e3;'},
+                    {field: 'power', title: '当日电量'},
+                    {field: 'proportion', title: '昨日电量'},
+                    {field: 'loadRate', title: '环比差'},
+                    {field: 'hb', title: '环比%'},
+                    {field: 'qntqdl', title: '去年同期电量'},
+                    {field: 'tbc', title: '同比差'},
+                    {field: 'tb', title: '同比%'},
+                ]],
+                data: [
+                    {
+                        number: '有功(KWh)', 
+                        power: ygData.brzl || "0.00", 
+                        proportion: ygData.zrzl || "0.00", 
+                        loadRate: ygData.hbc || "0.00",
+                        hb: ygData.hb || "0%",
+                        qntqdl: ygData.qnzl || "0.00",
+                        tbc: ygData.tbc || "0.00",
+                        tb: ygData.tb || "0%"
+                    },
+                    {
+                        number: '无功(KWh)', 
+                        power: wgData.brzl || "0.00", 
+                        proportion: wgData.zrzl || "0.00", 
+                        loadRate: wgData.hbc || "0.00",
+                        hb: wgData.hb || "0%",
+                        qntqdl: wgData.qnzl || "0.00",
+                        tbc: wgData.tbc || "0.00",
+                        tb: wgData.tb || "0%"
+                    }
+                ],
+                done: function (res, curr, count) {
+                    // 获取表格实例
+                    var tableIns = this.elem.next();
+                    // 获取最后一行
+                    var lastRow = tableIns.find('tbody tr:last-child');
+                    // 设置最后一行的colspan属性
+                    // lastRow.find("td:first-child").attr('colspan', 2);
+                }
+            });
+        });
+    }
+
+    //定义全局变量
+    var myChart = echarts.init(document.getElementById('unit2_3_2_1'));
+    var option =null;
+    var zdljt =0;
+    var yddw = '';
+    const now = new Date();
+    // 获取年、月、日（月份需要+1，因为月份从0开始计数）
+    const thisyear = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const formattedMonth = month.toString().padStart(2, '0');
+    const formattedDay = day.toString().padStart(2, '0');
+
+    function rtj(qn,zr,dr){
+        // 基于准备好的dom，初始化echarts实例
+        myChart = echarts.init(document.getElementById('unit2_3_2_1'));
+        // 配置项和数据
+        option = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            grid: {
+                left: "2%", // 图表距离容器左边框的距离，这里设置为10%
+                right: "2%", // 图表距离容器右边框的距离，这里设置为10%
+                bottom: "5%", // 图表距离容器下边框的距离，这里设置为10%
+                top: "10%", // 图表距离容器上边框的距离，这里设置为10%
+                containLabel: true // 确保grid区域包含坐标轴标签
+            },
+            legend: {
+                data: ['去年当日电量', '昨日电量', '当日电量']
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']
+            },
+            yAxis: {
+                type: 'value',
+                // min: 0,
+                // max: 1200,
+                // interval: 200,
+                axisLabel: {
+                    formatter: '{value} kWh'
+                }
+            },
+            series: [
+                {
+                    name: '去年当日电量',
+                    type: 'line',
+                    data: qn
+                },
+                {
+                    name: '昨日电量',
+                    type: 'line',
+                    data: zr
+                },
+                {
+                    name: '当日电量',
+                    type: 'line',
+                    data: dr
+                }
+            ]
+        };
+        //清空前面图表
+        myChart.setOption({}, true);
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+        // var  cms =myChart.getDataURL({
+        //     type:"png",
+        //     pixelRatio: 2, // 图片分辨率
+        //     backgroundColor: '#fff' // 背景色
+        // })
+        // var a = document.createElement('a');
+        // a.href = cms;
+        // a.download = 'echarts-chart.png'; // 设置下载的文件名
+        // a.click();
+    }
+    
+    function rchaxun(){
+        //获取测量位置，测量时间
+        var clwz = document.getElementById('pds').value;
+        var clsj = document.getElementById('test1').value;
+        // alert(clwz+"|"+date1)
+        
+
+        //修改标题，单位，时间
+        document.getElementById('unit2_1').innerHTML =clwz+" "+clsj+" 日电量统计报表";
+        document.getElementById('unit2_2_1').innerHTML ="用电单位:北京亚洲金融大厦";
+        document.getElementById('unit2_2_2').innerHTML = `制表时间: ${thisyear}-${formattedMonth}-${formattedDay}`;
+
+        //修改传输的名称内容
+        if (chuanshuneir ==""){
+            chuanshuneir ="1AA1-1";
+        }
+        //渲染小时表格  后端获取24小时中数据
+        //渲染折线图   去年当日电量，昨日电量，当日电量
+        $.ajax({
+            url: 'http://192.168.1.227:8081/hdb/getrtj',
+            data: {
+                clwz: chuanshuneir,
+                clsj: clsj
+            },
+            success: function (date) {
+
+                // 保存有功无功数据到全局变量，供导出使用
+                window.currentYgData = date.yg || {};
+                window.currentWgData = date.wg || {};
+                rtj(date.qn,date.zr,date.br);
+                var cms =date.br;
+
+                const zdl =cms
+                    .map(Number)
+                    .reduce((total, num) => total + num, 0)
+                    .toFixed(2);
+
+                zdljt = zdl;
+                var cmsdate =[
+                    {number: '01:00', power: cms[0], proportion: "13:00", loadRate: cms[12]},
+                    {number: '02:00', power: cms[1], proportion: "14:00", loadRate: cms[13]},
+                    {number: '03:00', power: cms[2], proportion: "15:00", loadRate: cms[14]},
+                    {number: '04:00', power: cms[3], proportion: "16:00", loadRate: cms[15]},
+                    {number: '05:00', power: cms[4], proportion: "17:00", loadRate: cms[16]},
+                    {number: '06:00', power: cms[5], proportion: "18:00", loadRate: cms[17]},
+                    {number: '07:00', power: cms[6], proportion: "19:00", loadRate: cms[18]},
+                    {number: '08:00', power: cms[7], proportion: "20:00", loadRate: cms[19]},
+                    {number: '09:00', power: cms[8], proportion: "21:00", loadRate: cms[20]},
+                    {number: '10:00', power: cms[9], proportion: "22:00", loadRate: cms[21]},
+                    {number: '11:00', power: cms[10], proportion: "23:00", loadRate: cms[22]},
+                    {number: '12:00', power: cms[11], proportion: "24:00", loadRate: cms[23]},
+                    {number: "合计" ,power: zdl}
+                ];
+
+                xrbg(cmsdate, date.yg || {}, date.wg || {});
+            },
+            error: function(err) {
+                console.error('获取数据失败:', err);
+            }
+        });
+        //渲染用电分类
+
+    }
+    window.onload = function() {
+        rchaxun();
+    }
+    async function rdaochu(){
+        var clwz = document.getElementById('pds').value;
+        var clsj = document.getElementById('test1').value;
+
+        // 获取当前数据（假设从全局变量或重新请求）
+        var ygData = window.currentYgData || {brzl: "0.00", zrzl: "0.00", hbc: "0.00", hb: "0%", qnzl: "0.00", tbc: "0.00", tb: "0%"};
+        var wgData = window.currentWgData || {brzl: "0.00", zrzl: "0.00", hbc: "0.00", hb: "0%", qnzl: "0.00", tbc: "0.00", tb: "0%"};
+
+        // 获取图表为Base64图片
+        const chartImage = myChart.getDataURL({
+            type: "png",
+            pixelRatio: 2,
+            backgroundColor: '#fff'
+        });
+
+        // 创建Excel工作簿
+        const workbook = new ExcelJS.Workbook();
+
+        // 设置工作簿默认字体（关键：影响列宽计算）
+        workbook.views = [{
+            showGridLines: true,
+            defaultFont: {
+                name: '宋体', // 使用常见字体
+                size: 11         // Excel默认字号
+            }
+        }];
+
+        // 定义通用对齐样式
+        const leftAlign = { horizontal: 'left', vertical: 'middle' }; // 整体左对齐居中
+        const centerAlign = { horizontal: 'center', vertical: 'middle' }; // 居中对齐
+        const rightAlign = { horizontal: 'right', vertical: 'middle' };   // 右对齐
+
+        const worksheet = workbook.addWorksheet('电量数据');
+        const dldata = workbook.addWorksheet('sheet1');
+
+        // 为月报worksheet设置列宽
+        worksheet.columns = [
+            { width: 10 },  // A列
+            { width: 10 },   // B列
+            { width: 10 },  // C列
+            { width: 10 },   // D列
+            { width: 10 },  // E列
+            { width: 13 },  // F列
+            { width: 10 },  // G列
+            { width: 10 },  // H列
+            { width: 10 },  // I列
+            { width: 10 },  // J列
+        ];
+        // 为月报dldata设置列宽
+        dldata.columns = [
+            { width: 10 },  // A列
+            { width: 10 },  // B列
+            { width: 10 },  // C列
+            { width: 13 },  // D列
+        ];
+
+        // 添加标题
+        worksheet.mergeCells('A1:J1'); //合并单元格
+        worksheet.getCell('A1').value = clwz+" "+clsj+" 日电量统计报表";
+        worksheet.getCell('A1').font = { bold: true, size: 14, name: '宋体' };
+        worksheet.getCell('A1').alignment = centerAlign;
+
+        worksheet.mergeCells('A2:E2');
+        worksheet.mergeCells('F2:J2');
+        worksheet.getCell('A2').value='用电单位:北京亚洲金融大厦';
+        worksheet.getCell('A2').font = { name: '宋体', size: 11 };
+        worksheet.getCell('A2').alignment = leftAlign; // 左对齐
+
+        worksheet.getCell('F2').value=`制表时间: ${thisyear}-${formattedMonth}-${formattedDay}`;
+        worksheet.getCell('F2').font = { name: '宋体', size: 11 };
+        worksheet.getCell('F2').alignment = rightAlign; // 右对齐
+        
+        worksheet.getCell('A3').value='小时';
+        worksheet.getCell('B3').value='电量(KWh)';
+        worksheet.getCell('A28').value='合计';
+        worksheet.getCell('B28').value=zdljt;
+        // 设置标题单元格字体
+        [worksheet.getCell('A3'), worksheet.getCell('B3'),  worksheet.getCell('A28'), 
+        worksheet.getCell('B28')].forEach(cell => {
+            cell.font = { name: '宋体', size: 11, bold: true };
+            cell.alignment = leftAlign;
+        });
+
+        worksheet.mergeCells('C25:C26');
+        worksheet.mergeCells('D25:D26');
+        worksheet.mergeCells('E25:E26');
+        worksheet.mergeCells('F25:F26');
+        worksheet.mergeCells('G25:G26');
+        worksheet.mergeCells('H25:H26');
+        worksheet.mergeCells('I25:I26');
+        worksheet.mergeCells('J25:J26');
+
+        worksheet.getCell('C25').value='用电分类';
+        worksheet.getCell('D25').value='当日电量';
+        worksheet.getCell('E25').value='昨日电量';
+        worksheet.getCell('F25').value='去年同期电量';
+        worksheet.getCell('G25').value='同比差';
+        worksheet.getCell('H25').value='同比%';
+        worksheet.getCell('I25').value='环比差';
+        worksheet.getCell('J25').value='环比%';
+        worksheet.getCell('C27').value='有功(KWh)';
+        worksheet.getCell('C28').value='无功(KWh)';
+
+        // 设置右侧标题样式
+        [worksheet.getCell('C25'), worksheet.getCell('D25'), worksheet.getCell('E25'),
+         worksheet.getCell('F25'), worksheet.getCell('G25'), worksheet.getCell('H25'), 
+         worksheet.getCell('I25'), worksheet.getCell('J25'), worksheet.getCell('C27'),
+         worksheet.getCell('C28')].forEach(cell => {
+            cell.font = { name: '宋体', size: 11 };
+            cell.alignment = centerAlign; // 右侧标题居中对齐
+        });
+
+        // 添加图表图片到Excel
+        const imageId = workbook.addImage({
+            base64: chartImage,
+            extension: 'png'
+        });
+        worksheet.mergeCells('C3:J20');
+        // 将图片添加到工作表 (从A3单元格开始，跨越10列20行)
+        worksheet.addImage(imageId, {
+            tl: { col: 2.1, row: 2.1 }, // 稍微C3稍微偏移一点
+            br: { col: 9.9, row: 19.9 }, // 比J19稍微小一点
+            editAs: 'absolute'
+        });
+
+        // 填充数据
+        const exceltime = 
+        [
+            "01:00", "02:00", "03:00", "04:00", "05:00", "06:00",
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
+            "13:00", "14:00", "15:00", "16:00", "17:00", "18:00",
+            "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"
+        ];
+        const onlineData = option.series[0].data; //去年
+        const offlineData = option.series[1].data; //昨日
+        const theData = option.series[2].data; //今日
+
+        for (let i = 0; i < exceltime.length; i++) {
+            const row = 4 + i;
+            const dateCell = worksheet.getCell(`A${row}`);
+            const valueCell = worksheet.getCell(`B${row}`);
+            dateCell.value = exceltime[i];
+            valueCell.value = theData[i] || '0.00';
+            // 设置数据单元格样式，确保字体一致
+            [dateCell, valueCell].forEach(cell => {
+                    cell.font = { name: '宋体', size: 11 };
+                    cell.alignment = leftAlign; // 左侧数据左对齐
+            });
+        }
+
+        // 填充有功无功数据到Excel
+        worksheet.getCell('D27').value = ygData.brzl || "0.00";
+        worksheet.getCell('E27').value = ygData.zrzl || "0.00";
+        worksheet.getCell('F27').value = ygData.qnzl || "0.00";
+        worksheet.getCell('G27').value = ygData.tbc || "0.00";
+        worksheet.getCell('H27').value = ygData.tb || "0%";
+        worksheet.getCell('I27').value = ygData.hbc || "0.00";
+        worksheet.getCell('J27').value = ygData.hb || "0%";
+        
+        worksheet.getCell('D28').value = wgData.brzl || "0.00";
+        worksheet.getCell('E28').value = wgData.zrzl || "0.00";
+        worksheet.getCell('F28').value = wgData.qnzl || "0.00";
+        worksheet.getCell('G28').value = wgData.tbc || "0.00";
+        worksheet.getCell('H28').value = wgData.tb || "0%";
+        worksheet.getCell('I28').value = wgData.hbc || "0.00";
+        worksheet.getCell('J28').value = wgData.hb || "0%";
+        
+        // 设置数据单元格样式
+        for (let row = 27; row <= 28; row++) {
+            for (let col = 4; col <= 10; col++) {
+                const cell = worksheet.getCell(row, col);
+                cell.font = { name: '宋体', size: 11 };
+                cell.alignment = centerAlign;
+            }
+        }
+        
+        dldata.getCell('B1').value = '当日电量';
+        dldata.getCell('C1').value = '昨日电量';
+        dldata.getCell('D1').value = '去年同期电量';
+        // 设置dldata表头样式
+        [dldata.getCell('B1'), dldata.getCell('C1'), dldata.getCell('D1')].forEach(cell => {
+            cell.font = { bold: true, name: '宋体', size: 11 };
+            cell.alignment = leftAlign; // 左侧标题左对齐
+        });
+        for (let i = 0; i < exceltime.length; i++) {
+            const row = i + 2;
+            const cellA = dldata.getCell(`A${row}`);
+            const cellB = dldata.getCell(`B${row}`);
+            const cellC = dldata.getCell(`C${row}`);
+            const cellD = dldata.getCell(`D${row}`);
+            cellA.value = exceltime[i];
+            cellB.value = theData[i] || '0.00';
+            cellC.value = offlineData[i] || '0.00';
+            cellD.value = onlineData[i] || '0.00';
+            // 设置数据单元格样式
+            [cellA, cellB, cellC, cellD].forEach(cell => {
+                cell.font = { name: '宋体', size: 11 };
+                cell.alignment = leftAlign; // 左侧数据左对齐
+            });
+        }
+
+        // 为A1到L19添加边框
+        const borderStyle = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+
+        // 遍历A1到L19的所有单元格设置边框
+        for (let row = 1; row <= 28; row++) {
+            for (let col = 1; col <= 10; col++) { 
+                const cell = worksheet.getCell(row, col);
+                // 设置内边框
+                cell.border = borderStyle;
+            }
+        }
+
+        // 设置dldata的边框
+        for (let row = 1; row <= 25; row++) {
+            for (let col = 1; col <= 4; col++) { 
+                const cell = dldata.getCell(row, col);
+                // 设置内边框
+                cell.border = borderStyle;
+            }
+        }
+
+        // 生成Excel文件并下载
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }), `电量数据报表_${clsj}.xlsx`);
+    }
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        var today = new Date();
+        var year = today.getFullYear();
+        var month = (today.getMonth() + 1).toString().padStart(2, '0'); // 月份从 0 开始，所以要 +1，再补 0 保证两位数
+        var months = (today.getMonth()).toString().padStart(2, '0'); // 月份从 0 开始，所以要 +1，再补 0 保证两位数
+        var day = today.getDate().toString().padStart(2, '0');
+        var currentDate = year + '-' + month + '-' + day;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#test1' //指定元素
+            , value: currentDate
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        #title_zxjt {
+            width: 99%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        #body_zxjt {
+            width: 99%;
+            height: 800px;
+            margin-top: 0px;
+        }
+
+        body {
+            /*overflow: hidden;*/
+        }
+
+        ul>li {
+            /*height: 30px;*/
+        }
+    </style>
+
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/layui/jquery-3.5.1.min.js"></script>
+</head>
+
+<body>
+
+    <div id="body_zxjt" class="layui-tab layui-tab-card" lay-filter="mainTab">
+        <ul class="layui-tab-title" style="height: 30px">
+            <li class="layui-this">西区1#配电室</li>
+            <li>东区2#配电室</li>
+            <li>东区6#配电室</li>
+        </ul>
+
+        <div class="layui-tab-content" style="padding: 0px;width: 100%;height: 1000px">
+            <div class="layui-tab-item  layui-show">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0px">
+                    <ul class="layui-tab-title Navigation">
+                        <li class="layui-this">1号总配高压系统图</li>
+                        <li>1号总配低压4号母线I段</li>
+                        <li>1号总配低压4号母线II段</li>
+                        <li>1号总配低压5号母线I段</li>
+                        <li>1号总配低压5号母线II段</li>
+                        <li>1号总配低压6号母线I段</li>
+                        <li>1号总配低压6号母线II段</li>
+                        <li>1号总配低压7号母线I段</li>
+                        <li>1号总配低压7号母线II段</li>
+                    </ul>
+                    <div class="layui-tab-content" style="padding: 0px;width: 100%;height: 100%">
+                        <div style="width: 100%;height: 20px;text-align: center" id="NavigationName">1号总配高压系统图状态监测</div>
+                        <div class="layui-tab-item layui-show">
+                            <!-- 默认加载的页面 -->
+                            <iframe src="../tz/1号高压总配.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <!-- 延迟加载的页面，使用data-src存储真实地址 -->
+                            <iframe data-src="../tz/4号母线I段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../tz/4号母线II段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../tz/5号母线I段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../tz/5号母线II段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../tz/6号母线I段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../tz/6号母线II段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../tz/7号母线I段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../tz/7号母线II段.html?v=20261119" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief2" style="margin-top: 0px">
+                    <ul class="layui-tab-title Navigation">
+                        <li class="layui-this">2号总配低压4号母线I段</li>
+                        <li>2号总配低压4号母线II段</li>
+                        <li>2号总配低压5号母线I段</li>
+                        <li>2号总配低压5号母线II段</li>
+                        <li>2号总配低压6号母线I段</li>
+                        <li>2号总配低压6号母线II段</li>
+                        <li>2号总配低压7号母线I段</li>
+                        <li>2号总配低压7号母线II段</li>
+                    </ul>
+                    <div class="layui-tab-content" style="padding: 0px;width: 100%;height: 100%">
+                        <div class="layui-tab-item layui-show">
+                            <iframe src="../towPei/2号总配低压4号母线I段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../towPei/2号总配低压4号母线II段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../towPei/2号总配低压5号母线I段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../towPei/2号总配低压5号母线II段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../towPei/2号总配低压6号母线I段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../towPei/2号总配低压6号母线II段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../towPei/2号总配低压7号母线I段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item">
+                            <iframe data-src="../towPei/2号总配低压7号母线II段.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief3" style="margin-top: 0px">
+                    <ul class="layui-tab-title Navigation">
+                        <li class="layui-this">6号配低压4号母线</li>
+                        <li>6号配低压5号母线</li>
+                    </ul>
+                    <div class="layui-tab-content" style="padding: 0px;width: 100%;height: 100%">
+                        <div class="layui-tab-item layui-show">
+                            <iframe src="../sixPei/6号配低压4号母线.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                        <div class="layui-tab-item ">
+                            <iframe data-src="../sixPei/6号配低压5号母线.html" style="width: 100%;height: 920px"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        layui.use('element', function () {
+            var element = layui.element;
+            var $ = layui.jquery;
+
+            // 监听所有标签切换事件
+            element.on('tab()', function (data) {
+                var tabContent = $(this).closest('.layui-tab').find('.layui-tab-content .layui-tab-item').eq(data.index);
+                var iframe = tabContent.find('iframe');
+
+                // 如果iframe存在且未加载过内容，则加载
+                if (iframe.length && !iframe.attr('src') && iframe.attr('data-src')) {
+                    iframe.attr('src', iframe.attr('data-src'));
+                }
+
+                // 更新导航名称
+                const text = $(this).text();
+                $('#NavigationName').text(text + '主线路图状态监测');
+            });
+
+            //初始加载东区2#配电室和东区6#配电室的第一个标签内容
+
+        });
+    </script>
+</body>
+
+</html>

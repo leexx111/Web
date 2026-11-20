@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>能耗统计分析</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="title-bar">能耗统计分析</div>
+<main class="layout"><aside class="tree-panel"><div id="tree"></div></aside><section class="data-panel"><div class="toolbar"><div><strong>树结构配置</strong><span id="dirty" class="muted"></span></div><div><button id="reset">重置树结构</button><button id="save" class="primary">保存修改</button></div></div><div class="filters"><label>开始时间 <input type="datetime-local"></label><label>结束时间 <input type="datetime-local"></label><button class="primary" id="query">查询</button></div><table><thead><tr><th>序号</th><th>配电室</th><th>设备名称</th><th>起始时间</th><th>结束时间</th><th>耗电量 (kWh)</th></tr></thead><tbody><tr><td colspan="6" class="empty">请选择需要统计的电表</td></tr></tbody></table></section></main>
+<div id="overlay" class="overlay"><section class="dialog" role="dialog" aria-modal="true"><div class="dialog-head"><strong id="dialogTitle"></strong><button id="close" aria-label="关闭">×</button></div><div id="dialogBody" class="dialog-body"></div><div id="dialogFooter" class="dialog-footer"></div></section></div><div id="toast" class="toast"></div>
+<script src="data.js"></script><script src="source-tree.js"></script><script src="app.js"></script>
+</body></html>

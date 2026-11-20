@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户基本信息界面</title>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <style >
+        #userDemo01{
+            width: 500px;
+            height: 520px;
+            margin-top: 100px;
+            margin-left: 200px;
+            background-color: #ffffff;
+            display: flex;
+        }
+        #userDemo02{
+            width: 500px;
+            height: 70px;
+            margin-left: 200px;
+            background-color: #ffffff;
+            display: flex;
+        }
+        #uilt_UD1{
+            width: 60%;
+            height: 400px;
+            /*background-color: red;*/
+            margin-top: 50px;
+        }
+        #uilt_UD2{
+            width: 39%;
+            height: 400px;
+            margin-top: 50px;
+            margin-left: 10px;
+            /*padding-left: 30px;*/
+        }
+    </style>
+</head>
+<body style="background-color: rgba(85,85,85,0.6)">
+<button class="layui-btn" style="position: absolute;top: 95px;left: 220px">个人信息</button>
+<div id="userDemo01">
+        <div id="uilt_UD1">
+
+            <form class="layui-form" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">登录名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="loginName" value="A07019" readonly lay - verify="required" placeholder="请输入登录名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" value="admin" readonly lay - verify="required" placeholder="请输入姓名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="sex" value="男" title="男" checked>
+                        <input type="radio" name="sex" value="女" title="女">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phone" placeholder="101" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" placeholder="101@163.com" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">单位</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="company" value="北京亚洲金融大厦" readonly lay - verify="required" placeholder="请输入单位" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="department" value="设备设施管理部" readonly lay - verify="required" placeholder="请输入部门" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">备注</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="department" value="" readonly lay - verify="required" placeholder="" class="layui-input">
+                    </div>
+                </div>
+
+<!--                <div class="layui-form-item">-->
+<!--                    <div class="layui-input-block">-->
+<!--                        <button class="layui-btn" type="submit">修改个人信息</button>-->
+<!--                    </div>-->
+<!--                </div>-->
+            </form>
+        </div>
+        <div id="uilt_UD2">
+
+            <img src="../../static/img/cms01.jpg" style="border: 3px solid #9b9999;" height="150px" width="150px"/>
+
+            <div style="margin-top: 40px">单位 北京亚洲金融大厦</div>
+            <button class="layui-btn" type="submit" style="margin-top: 220px">修改个人信息</button>
+        </div>
+    </div>
+<div id="userDemo02">
+<!--    <div style="width: 70%"></div>-->
+<!--    <button class="layui-btn" type="submit" style="">取消</button>-->
+<!--    <button class="layui-btn" type="submit" style="">确认</button>-->
+</div>
+<script>
+    //Demo
+    layui.use('form', function () {
+        var form = layui.form;
+        // 监听提交
+        form.on('submit(formDemo)', function (data) {
+            console.log(data);
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

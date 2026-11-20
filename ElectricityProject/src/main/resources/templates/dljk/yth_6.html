@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meat http-equiv="refresh" content="5"> -->
+    <title>首页</title>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <!--    <script src="newLayui/echarts.min.js"></script>-->
+    <link rel="stylesheet" href="../../static/newLayui/css/layui.css">
+    <!--    <link rel="stylesheet" href="newLayui/css/layui.css">-->
+    <!--    <script src="newLayui/layui.js"></script>-->
+    <script src="../../static/newLayui/layui.js"></script>
+    <style>
+        #byqxq > *,#gjxq > *{
+            margin-top: 0;
+        }
+        #dlxqlb > button{
+            height: 32px;
+            margin-top: 5px;
+            width: 130px;
+        }
+        #main,#yth_dltj,#yth_dlfh,.yuanhua{
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        /* 数据标签样式：替代button，适配缩放 */
+        .data-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            margin: 2px 0;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+            cursor: default; /* 去除button默认指针 */
+            box-sizing: border-box;
+            min-width: 100px; /* 最小宽度，防止内容过少时过窄 */
+        }
+        /* 标签颜色：对齐原layui-btn色系 */
+        .tag-default { background-color: #1E9FFF; } /* 原layui-btn */
+        .tag-blue { background-color: #009688; }    /* 原layui-bg-blue */
+        .tag-orange { background-color: #FF9800; } /* 原layui-bg-orange */
+        .tag-red { background-color: #F44336; }   /* 原layui-bg-red */
+        /* 图表容器：确保初始化时占位 */
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            min-width: 200px; /* 防止缩放过小 */
+        }
+        /* 数据项容器：使用弹性布局防止换行 */
+        .data-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            white-space: nowrap; /* 防止文字换行 */
+        }
+        .data-item label {
+            margin-right: 10px;
+            font-size: 16px; /* 增大标签文字 */
+            min-width: 80px; /* 固定标签宽度 */
+        }
+    </style>
+</head>
+<body style="  overflow: hidden;">
+<!--<h1>电力负荷统计图</h1>-->
+<!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+<div class="layui-tab layui-tab-card" style="width: 100%;margin: 0px">
+    <ul class="layui-tab-title">
+        <li class="layui-this" onclick="dlfhdj()">电力负荷</li>
+        <li onclick="rpjfh()">日平均负荷</li>
+        <li onclick="dltjdj()">电量统计</li>
+        <!--        <li onclick="demo()">数据统计</li>-->
+    </ul>
+    <div class="layui-tab-content" style="padding: 0px;height: 250px;width: 100%">
+        <div class="layui-tab-item layui-show">
+            <div id="yth_dlfh" style="width: 100%;height:250px;  border: 1px solid rgba(148,148,148,0.84);"></div>
+        </div>
+        <div class="layui-tab-item">
+            <!-- 这里添加属性信息的内容 -->
+            <div id="main" style="width: 100%;height:250px;  border: 1px solid rgba(148,148,148,0.84);"></div>
+            <!--            <table class="layui-hide" id="test2" lay-filter="test2"></table>-->
+        </div>
+        <div class="layui-tab-item" style="width: 100%">
+            <!-- 这里添加系统类型的内容 -->
+            <div id="yth_dltj" style="width: 1725px;height:250px;  border: 1px solid rgba(148,148,148,0.84);"></div>
+        </div>
+    </div>
+</div>
+<div  style="display: flex;width: 100%">
+    <div id="fhxqs" class="yuanhua" style="display: flex; width: 33%;height:270px;margin-top: 5px;  border: 1px solid rgba(148,148,148,0.84);">
+        <div id="byq1" style="width: 270px;height: 270px;margin-left: 20px;">
+            <b style="margin-left: 25px;font-size: 17px">负荷详情</b>
+            <div id="fhxq" style="width: 270px;height: 220px;"></div>
+        </div>
+        <!-- <div style="width: 200px;height: 270px;margin: 20px;padding-left: 0px">
+            本日最高 : <button type="button"  id="brzg" style="width: 130px" class="layui-btn">215KW</button><br><br>
+            本月最高 : <button type="button" id="byzg" style="width: 130px" class="layui-btn layui-btn layui-bg-blue">403KW</button><br><br>
+            本年最高 : <button type="button" id="bnzg" style="width: 130px" class="layui-btn layui-bg-orange">501KW</button><br><br>
+            本年最低 : <button type="button" id="bnzd" style="width: 130px" class="layui-btn layui-bg-red">109KW</button><br><br>
+        </div> -->
+        <div style="width: 240px; height: 270px; margin: 20px; padding-left: 0px; display: flex; flex-direction: column; justify-content: center;">
+            <div class="data-item">
+                <label>本日最高:</label>
+                <span id="brzg" class="data-tag tag-default">-- KW</span>
+            </div>
+            <div class="data-item">
+                <label>本月最高:</label>
+                <span id="byzg" class="data-tag tag-blue">-- KW</span>
+            </div>
+            <div class="data-item">
+                <label>本年最高:</label>
+                <span id="bnzg" class="data-tag tag-orange">-- KW</span>
+            </div>
+            <div class="data-item">
+                <label>本年最低:</label>
+                <span id="bnzd" class="data-tag tag-red">-- KW</span>
+            </div>
+        </div>
+    </div>
+    <div id="dlxqs" class="yuanhua" style="display: flex; width: 33%;height:270px;margin-top: 5px; margin-left: 10px;  border: 1px solid rgba(148,148,148,0.84);">
+        <div id="byq" style="width: 270px;height: 270px;margin-left: 20px;">
+            <b style="margin-left: 25px;font-size: 17px">电量详情</b>
+            <div id="dlxq" style="width: 270px;height: 220px;"></div>
+        </div>
+        <!-- <div style="width: 200px;height: 250px;margin-top: 15px;padding-left: 20px" id="dlxqlb">
+            月总电量 : <button style="padding-left:  5px;padding-right: 5px" id="yzdl" type="button" class="layui-btn ">157.814MWh</button><br>
+            环比电量 : <button style="padding-left:  5px;padding-right: 5px" id="yhbdl" type="button" class="layui-btn layui-bg-blue">178.645MWh</button><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;环比 : <button style="padding-left:  5px;padding-right: 5px" id="yhb" type="button" class="layui-btn layui-bg-orange">87%</button><br>
+            年总电量 : <button style="padding-left:  5px;padding-right: 5px" id="nzdl" type="button" class="layui-btn ">5374.929MWh</button><br>
+            环比电量 : <button style="padding-left:  5px;padding-right: 5px" id="nhbdl" type="button" class="layui-btn layui-bg-blue">5374.929MWh</button><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;环比 : <button style="padding-left:  5px;padding-right: 5px" id="nhb" type="button" class="layui-btn layui-bg-red">5374.929MWh</button><br>
+        </div> -->
+        <!-- 数据标签：使用弹性布局容器防止换行 -->
+        <div style="width: 240px; height: 270px; margin-top: 15px; padding-left: 20px; display: flex; flex-direction: column; justify-content: center;" id="dlxqlb">
+            <div class="data-item">
+                <label>月总电量:</label>
+                <span id="yzdl" class="data-tag tag-default">-- MWh</span>
+            </div>
+            <div class="data-item">
+                <label>环比电量:</label>
+                <span id="yhbdl" class="data-tag tag-blue">-- MWh</span>
+            </div>
+            <div class="data-item">
+                <label>环比:</label>
+                <span id="yhb" class="data-tag tag-orange">-- %</span>
+            </div>
+            <div class="data-item">
+                <label>年总电量:</label>
+                <span id="nzdl" class="data-tag tag-default">-- MWh</span>
+            </div>
+            <div class="data-item">
+                <label>同比电量:</label>
+                <span id="nhbdl" class="data-tag tag-blue">-- MWh</span>
+            </div>
+            <div class="data-item">
+                <label>同比:</label>
+                <span id="nhb" class="data-tag tag-red">-- %</span>
+            </div>
+        </div>
+    </div>
+    <div id="byqxq" class="yuanhua" style=" width: 33%;height:270px;margin-top: 5px; margin-left: 10px;  border: 1px solid rgba(148,148,148,0.84);">
+        <b style="margin-left: 25px;font-size: 18px">变压器详情</b>
+        <table id="byqxqtable"  style="margin: 0px">
+        </table>
+    </div>
+
+</div>
+<div id="gjxq" class="yuanhua" style="width: 100%;height:400px;margin-top: 10px;  border: 1px solid rgba(148,148,148,0.84);">
+    <b style="margin-left: 25px;font-size: 17px">告警列表</b>
+    <table id="gjtable"  style="margin: 0px">
+    </table>
+</div>
+
+<script type="text/javascript">
+
+    $ =layui.jquery;
+
+    // 生成24小时整点时间列表
+    function generate24hTimeLabels() {
+        const timeLabels = [];
+        for (let hour = 0; hour < 24; hour++) {
+            const time = `${hour.toString().padStart(2, '0')}:00:00`;
+            timeLabels.push(time);
+        }
+        return timeLabels;
+    }
+
+    // 电量负荷图表初始化
+    function dlfhdj() {
+        const chartDom = document.getElementById('yth_dlfh');
+        if (!chartDom) {
+            console.error('未找到ID为"yth_dlfh"的DOM元素');
+            return;
+        }
+        const chart = echarts.init(chartDom);
+
+        // 配置颜色
+        const jrColor = '#ff0000';
+        const zrColor = '#0000ff';
+        const fixedWholeHours = generate24hTimeLabels();
+        // const currentDate = new Date().toISOString().split('T')[0]; // 当天日期，如"2025-08-22"
+
+        const beijingTime = new Date(Date.now() + 8 * 3600 * 1000);
+        // 提取YYYY-MM-DD格式的北京时间日期
+        const currentDate = beijingTime.toISOString().split('T')[0];
+
+        $.ajax({
+            url: 'http://192.168.1.227:8081/hdb/getBydlfh',
+            method: 'POST',
+            data: {
+                date: currentDate,
+                name:"6号配电室"
+            },
+            success: function(response) {
+                if (!Array.isArray(response)) {
+                    console.error('返回数据格式不正确，期望数组类型');
+                    return;
+                }
+                // 处理数据：宽松验证，确保17:10:00这类时间能正确转换
+                const chartData = response
+                    .filter(item => {
+                        // 只过滤完全无效的数据（没有时间或数值）
+                        return item && item.shijian && item.jr !== undefined && item.zr !== undefined;
+                    })
+                    .map(item => {
+                        // 强制绑定到当天：拼接"当前日期 时间"（关键修复）
+                        const fullTimeStr = `${currentDate} ${item.shijian}`;
+                        // 转换为时间戳（允许部分不规范时间，如秒数省略的情况）
+                        const timestamp = new Date(fullTimeStr).getTime();
+
+                        return {
+                            ...item,
+                            fullTime: fullTimeStr, // 保存完整时间字符串用于调试
+                            timestamp: timestamp,
+                            isWholeHour: fixedWholeHours.includes(item.shijian)
+                        };
+                    })
+                    // 过滤绝对无效的时间戳（极少情况），但保留可能的有效数据
+                    .filter(item => !isNaN(item.timestamp))
+                    .sort((a, b) => a.timestamp - b.timestamp);
+
+                // 格式化系列数据：[时间戳, 数值]（确保数值正确传递）
+                const formatSeriesData = (key) => {
+                    return chartData.map(item => [item.timestamp, item[key]]);
+                };
+
+                // 提取整点数据用于标记
+                const wholeHourData = chartData.filter(item => item.isWholeHour);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            // 修复时间无效问题：直接从数据点获取时间戳
+                            const dataPoint = params[0].data; // [timestamp, value]
+                            const timestamp = dataPoint[0];
+                            if (isNaN(timestamp)) {
+                                return `时间无效<br/>${params[0].seriesName}: ${dataPoint[1]}`;
+                            }
+
+                            // 格式化时间（确保正确解析）
+                            const time = new Date(timestamp);
+                            const formattedTime = time.toTimeString().slice(0, 8); // HH:mm:ss
+
+                            // 显示数值（确保一定展示）
+                            let result = `时间: ${formattedTime}<br/>`;
+                            params.forEach(item => {
+                                result += `${item.seriesName}: ${item.data[1]}<br/>`;
+                            });
+                            return result;
+                        }
+                    },
+                    legend: {
+                        data: ['今日负荷', '昨日负荷'],
+                        top: 10
+                    },
+                    grid: {
+                        left: '5%',
+                        right: '5%',
+                        bottom: '10%',
+                        top: '15%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'time',
+                        name: '时间',
+                        min: new Date(`${currentDate} 00:00:00`).getTime(),
+                        max: new Date(`${currentDate} 23:59:59`).getTime(),
+                        axisLabel: {
+                            formatter: value => new Date(value).toTimeString().slice(0, 5), // HH:00
+                            rotate: 0,
+                            interval: 0, // 显示所有24个整点
+                            fontSize: 10
+                        },
+                        splitNumber: 24,
+                        splitLine: { show: true, lineStyle: { color: 'rgba(200,200,200,0.3)' } },
+                        axisLine: { show: true },
+                        axisTick: { show: true, interval: 3600 * 1000 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '总负荷/kW',
+                        nameTextStyle: { fontSize: 12 }
+                    },
+                    series: [
+                        {
+                            name: '今日负荷',
+                            data: formatSeriesData('jr'), // 确保数值正确传递
+                            type: 'line',
+                            smooth: false,
+                            lineStyle: { width: 2, color: jrColor },
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            itemStyle: {
+                                normal: { color: '#fff', borderColor: jrColor, borderWidth: 2 },
+                                emphasis: { symbolSize: 8 }
+                            },
+                            showSymbol: false,
+                            markPoint: {
+                                symbol: 'circle',
+                                symbolSize: 6,
+                                data: wholeHourData.map(item => ({
+                                    name: item.shijian,
+                                    value: item.jr,
+                                    xAxis: item.timestamp,
+                                    yAxis: item.jr,
+                                    itemStyle: { color: '#fff', borderColor: jrColor, borderWidth: 2 }
+                                })),
+                                label: { show: false }
+                            }
+                        },
+                        {
+                            name: '昨日负荷',
+                            data: formatSeriesData('zr'),
+                            type: 'line',
+                            smooth: false,
+                            lineStyle: { width: 2, color: zrColor },
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            itemStyle: {
+                                normal: { color: '#fff', borderColor: zrColor, borderWidth: 2 },
+                                emphasis: { symbolSize: 8 }
+                            },
+                            showSymbol: false,
+                            markPoint: {
+                                symbol: 'circle',
+                                symbolSize: 6,
+                                data: wholeHourData.map(item => ({
+                                    name: item.shijian,
+                                    value: item.zr,
+                                    xAxis: item.timestamp,
+                                    yAxis: item.zr,
+                                    itemStyle: { color: '#fff', borderColor: zrColor, borderWidth: 2 }
+                                })),
+                                label: { show: false }
+                            }
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+                window.addEventListener('resize', () => chart.resize());
+            },
+            error: function(xhr, status, error) {
+                console.error('获取数据失败:', error, '状态码:', status);
+            }
+        });
+        
+    }
+
+    
+    //电量统计
+    function dltjdj(){
+        // 查询上月电量日平均值
+        $.ajax({
+            url: 'http://192.168.1.227:8081/hdb/getByLastMonthMeanEQ',
+            data:{
+              name :"6号配电室"
+            },
+            success: function (response) {
+                const LastMonthMeanEQ = response;
+                var yth_dltj = echarts.init(document.getElementById('yth_dltj'));
+                var yth_dltj_option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['本月日电量统计']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: ['1', '2', '3', '4', '5', '6', '7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30'],
+                            axisTick: {
+                                alignWithLabel: true
+                            }
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '本月日电量统计',
+                            type: 'bar',
+                            barWidth: '60%',
+                            data: LastMonthMeanEQ
+                        }
+                    ]
+
+                };
+
+                yth_dltj.setOption(yth_dltj_option);
+            }
+        });
+    }
+
+    function kaiju(){
+        // // alert("提交成功");
+        var zfh =null;
+        //查询负荷详情  【总负荷，每日最高负荷，本月最高负荷，本年最高负荷，本年最低负荷】 /getfhxq
+        $.ajax({
+            url:'http://192.168.1.227:8081/hdb/getfhxq',
+            data:{
+              name:"6号配电室"
+            },
+            method: 'POST',
+            success:function (date){
+                //假设返回的是数组
+                if (Array.isArray(date)) {
+                    // alert(date[1]);
+                    zfh =date[0];
+                    document.getElementById("brzg").innerHTML =date[1]+"KW";
+                    document.getElementById("byzg").innerHTML =date[2]+"KW";
+                    document.getElementById("bnzg").innerHTML =date[3]+"KW";
+                    document.getElementById("bnzd").innerHTML =date[4]+"KW";
+                    var fhxq = echarts.init(document.getElementById('fhxq'));
+                    var fhxgop = {
+                        series: [
+                            {
+                                type: 'gauge',
+                                min: 0, // 设置最小值，根据你的需求修改
+                                max: 6000, // 设置最大值，根据你的需求修改
+                                axisLine: {
+                                    lineStyle: {
+                                        width: 7,
+                                        color: [
+                                            [0.3, '#67e0e3'],
+                                            [0.7, '#37a2da'],
+                                            [1, '#fd666d']
+                                        ]
+                                    }
+                                },
+                                pointer: {
+                                    itemStyle: {
+                                        color: 'auto'
+                                    }
+                                },
+                                axisTick: {
+                                    distance: -30,
+                                    length: 8,
+                                    lineStyle: {
+                                        color: '#ffffff',
+                                        width: 2
+                                    }
+                                },
+                                splitLine: {
+                                    distance: -30,
+                                    length: 30,
+                                    lineStyle: {
+                                        color: '#ffffff',
+                                        width: 4
+                                    }
+                                },
+                                axisLabel: {
+                                    color: 'inherit',
+                                    distance: 10,
+                                    fontSize: 10
+                                },
+                                detail: {
+                                    valueAnimation: true,
+                                    formatter: '{value} KW',
+                                    color: 'inherit',
+                                    fontSize: 15
+                                },
+                                data: [
+                                    {
+                                        value: zfh
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+                    fhxq.setOption(fhxgop);
+                } else {
+                    console.log('返回的数据不是数组');
+                }
+            }
+        })
+
+        layui.use('table', function () {
+
+            var table = layui.table;
+            // 固定的变压器编号列表
+            var fixedTransformers = [
+                {number: '1#变压器', power: 'null', proportion: 'null', loadRate: 'null'},
+                {number: '2#变压器', power: 'null', proportion: 'null', loadRate: 'null'},
+            ];
+
+            // 变压器表格 - 使用AJAX获取数据
+            $.ajax({
+                url: 'http://192.168.1.227:8081/hdb/getbyqxq',
+                data:{
+                    name:"6号配电室"
+                },
+                method: 'POST',
+                dataType: 'json',
+                success: function(res) {
+                    // 处理接口返回数据，按实际结构映射
+                    if (res && res.length > 0) { // 接口返回的是直接数组
+                        // 遍历固定的变压器列表
+                        fixedTransformers.forEach(function(transformer, index) {
+                            // 从接口数据中找到对应的数据（按顺序对应1-4号变压器）
+                            var apiData = res[index] || {};
+
+                            // 字段映射：接口返回的字段 -> 表格字段
+                            transformer.power = apiData.originalValue !== undefined ? apiData.originalValue : 'null'; // 功率对应originalValue
+                            transformer.proportion = apiData.ratio !== undefined ? apiData.ratio : 'null'; // 占比对应ratio
+                            transformer.loadRate = apiData.fuzai !== undefined ? apiData.fuzai : 'null'; // 负载率对应fuzai
+                        });
+                    }
+
+                    // 渲染表格
+                    renderTransformerTable(fixedTransformers);
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取变压器数据失败:', error);
+                    // 即使请求失败，也显示固定编号的表格，使用默认值
+                    renderTransformerTable(fixedTransformers);
+                }
+            });
+
+            // 渲染变压器表格的函数（调整标题单位）
+            function renderTransformerTable(data) {
+                table.render({
+                    elem: '#byqxqtable',
+                    cols: [[
+                        {field: 'number', title: '编号', fixed: 'left'}, // 固定列
+                        {field: 'power', title: '功率(kW/h)'},
+                        {field: 'proportion', title: '占比'},
+                        {field: 'loadRate', title: '负载率'}
+                    ]],
+                    data: data,
+                    height: 250,
+                    margin: 0
+                });
+            }
+
+            table.render({
+                elem: '#gjtable',
+                url: 'http://192.168.1.227:8081/hdb/getrecentalarm', // 原请求URL
+                cols: [[
+                    {field: 'xh', title: '序号', width: '10%', align: 'center'}, // 固定序号列
+                    {field: 'jb', title: '级别', width: '20%', align: 'center'}, // 转换后的报警级别
+                    {field: 'ms', title: '描述', width: '40%', align: 'center'}, // 拼接后的描述
+                    {field: 'zt', title: '状态', width: '15%', align: 'center'}, // 转换后的状态
+                    {field: 'jssj', title: '结束时间', width: '15%', align: 'center'} // 格式化后的时间
+                ]],
+                parseData: function (res) {
+                    // 处理原始数据：添加固定序号、转换字段格式
+                    const formattedData = (res || []).map((item, index) => {
+                        return {
+                            // 1. 固定序号：1-5（按数据顺序对应）
+                            xh: index + 1,
+                            // 2. 级别转换：1→一级报警，2→二级报警，3→三级报警（默认显示原始值）
+                            jb: item.alarm_level === '1' ? '一级报警' :
+                                item.alarm_level === '2' ? '二级报警' :
+                                    item.alarm_level === '3' ? '三级报警' : item.alarm_level,
+                            // 3. 描述拼接：alarm_name + 空格 + alarm_content + 空格 + alarm_title
+                            ms: `${item.alarm_name || ''} ${item.alarm_content || ''} ${item.alarm_title || ''}`.trim(),
+                            // 4. 状态转换：1→已确认，0→未确认（默认显示原始值）
+                            zt: item.alarm_status === '1' ? '已确认' :
+                                item.alarm_status === '0' ? '未确认' :
+                                    item.alarm_status === '2' ? '已恢复' : item.alarm_status,
+
+                            // 5. 结束时间格式化：替换T为空格（默认显示原始值）
+                            jssj: ['0', '1'].includes(String(item.alarm_status)) ? '未恢复' : String(item.alarm_status) === '2' && item.update_time ? item.update_time.replace('T', ' ') : '-'
+                        };
+                    });
+
+                    // 按layui表格要求返回格式（固定5条数据，count设为5）
+                    return {
+                        "code": 0,  // 成功状态码
+                        "msg": res.msg || "",  // 提示信息（若后端返回则使用，否则为空）
+                        "count": 5,  // 固定数据总数为5
+                        "data": formattedData  // 格式化后的5条数据
+                    };
+                },
+                height: 350,
+                margin: 0
+            });
+        });
+        //查询环比详情
+        $.ajax({
+            url:'http://192.168.1.227:8081/hdb/gethbxq',
+            data:{
+                name:"6号配电室"
+            },
+            method: 'POST',
+            success:function (date){
+                //假设返回的是数组
+                if (Array.isArray(date)) {
+                    document.getElementById("yzdl").innerHTML =date[0]+"MWh";
+                    document.getElementById("yhbdl").innerHTML =date[1]+"MWh";
+                    document.getElementById("yhb").innerHTML =date[2]+"%";
+                    document.getElementById("nzdl").innerHTML =date[3]+"MWh";
+                    document.getElementById("nhbdl").innerHTML =date[4]+"MWh";
+                    document.getElementById("nhb").innerHTML =date[5]+"%";
+
+
+                    var dlxq = echarts.init(document.getElementById('dlxq'));
+                    var dlxqop = {
+                        tooltip: {
+                            trigger: 'axis',  // 触发类型：坐标轴触发
+                            axisPointer: {
+                                type: 'shadow'  // 指示器类型：阴影
+                            },
+                            // 自定义提示框内容
+                            formatter: function(params) {
+                                // params是包含当前悬浮数据的数组
+                                let param = params[0];
+                                let name = param.name; // 获取x轴名称（月环比/年环比）
+                                let html = `<div style="font-weight: bold;">${name}</div>`;
+
+                                // 遍历所有数据系列，添加详细信息
+                                params.forEach(item => {
+                                    html += `<div>${item.seriesName}: ${item.value} MWh</div>`;
+                                });
+
+                                return html;
+                            }
+                        },
+
+                        legend: {
+                            data: ['去年/月', '今年/月']
+                        },
+                        // title: {
+                        //     text: '电量详情'
+                        // },
+                        xAxis: {
+                            type: 'category',
+                            data: ['月环比', '年同比']
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+
+                        series: [
+                            {
+                                data: [date[1], date[4]],
+                                name: '去年/月',
+                                type: 'bar',
+                                barWidth: 10,
+                                itemStyle: {
+                                    color: 'green' // 设置柱子颜色为蓝色
+                                }
+                            },
+                            {
+                                data: [date[0], date[3]],
+                                name: '今年/月',
+                                type: 'bar',
+                                barWidth: 10,
+                                itemStyle: {
+                                    color: 'blue' // 设置柱子颜色为蓝色
+                                }
+                            }
+                        ],
+
+                        grid: {
+                            top: '15%',
+                            bottom: '10%',
+                            left: '20%',
+                            right: '10%',
+                            // containLabel: true
+                        }
+                    }
+                    dlxq.setOption(dlxqop);
+                } else {
+                    console.log('返回的数据不是数组');
+                }
+            }
+        })
+    }
+
+    function rpjfh(){
+        $.ajax({
+            url: 'http://192.168.1.227:8081/hdb/getByLastMonthMeanW', // 查询上月日平均值
+            data:{
+                name:"6号配电室"
+            },
+            success: function (response) {
+                const receivedArray = response;
+                $.ajax({
+                    url: 'http://192.168.1.227:8081/hdb/getByThisMonthMeanW', // 查询当月日平均值
+                    data:{
+                        name:"6号配电室"
+                    },
+                    method: 'POST',
+                    success: function (response) {
+                        const receivedArrays = response;
+                        // 基于准备好的dom，初始化echarts实例
+                        var myChart = echarts.init(document.getElementById('main'));
+                        // 指定图表的配置项和数据
+                        var option = {
+                            tooltip: {
+                                trigger: 'axis'
+                            },
+                            legend: {
+                                data: ['本月日平均负荷', '上月日平均负荷']
+                            },
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '3%',
+                                containLabel: true
+                            },
+                            toolbox: {
+                                feature: {
+                                    saveAsImage: {}
+                                }
+                            },
+                            xAxis: {
+                                type: 'category',
+                                boundaryGap: false,
+                                data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+                            },
+                            yAxis: {
+                                type: 'value',
+                                name:'KW'
+                            },
+                            series: [
+                                {
+                                    name: '本月日平均负荷',
+                                    type: 'line',
+                                    stack: 'Total',
+                                    // data: [120, 132, 101, 134, 90, 230, 210, 123, 32, 132, 245, 213, 134, 90, 230, 210, 123, 32, 400, 231, 132, 245, 213, 134, 90, 230, 230, 210, 210, 123, 32, 113]
+                                    data: receivedArrays,
+                                    markPoint: {
+                                        data: [
+                                            {
+                                                type: 'max',
+                                                name: 'Max'
+                                            },
+                                            {
+                                                type: 'min',
+                                                name: 'Min'
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    name: '上月日平均负荷',
+                                    type: 'line',
+                                    stack: 'Totals',
+                                    // data: [220, 182, 191, 234, 290, 330, 310, 90, 230, 210, 123, 32, 113, 120, 132, 101, 134, 90, 90, 230, 210, 123, 32, 251, 321, 192, 213, 134, 90, 100, 400]
+                                    data: receivedArray
+                                }
+                            ]
+                        };
+                        // 使用刚指定的配置项和数据显示图表。
+                        myChart.setOption(option);
+                    }
+                });
+
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
+    }
+    window.onload = function() {
+        kaiju();
+        dlfhdj();
+    };
+
+
+    setInterval(dlfhdj,60*1000)
+</script>
+</body>
+</html>

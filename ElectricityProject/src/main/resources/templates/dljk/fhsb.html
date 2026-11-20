@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>负荷时比分析</title>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="../../static/ExcelJS/exceljs.min.js"></script>
+    <script src="../../static/ExcelJS/FileSaver.min.js"></script>
+    <style>
+        #title_fhsb{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*border: 1px solid #c7c7c5;*/
+
+        }
+
+        #body_fhsb{
+            width: 100%;
+            height: 670px;
+            /*background-color: #0C0C0C;*/
+        }
+        #uilt1_fhsb{
+            width: 100%;
+            height: 40px;
+            display: flex;
+            margin-top: 10px;
+        }
+        #uilt2_fhsb{
+            width: 98%;
+            height: 350px;
+            /*margin-top: 10px;*/
+            /*margin-left: 10px;*/
+            /*border: 1px solid black;*/
+
+            /*border-radius: 10px;*/
+            /*box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);*/
+            margin: 10px;
+            padding: 5px;
+            /*background-color: #0C0C0C;*/
+        }
+        #uilt3_fhsb{
+            width: 98%;
+            /*height: 300px;*/
+            /*margin-left: 10px;*/
+
+            /*border: 1px solid black;*/
+            /*border-radius: 10px;*/
+            /*box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);*/
+            margin: 10px;
+            padding: 5px;
+            /*background-color: #0C0C0C;*/
+        }
+        #uilt3_fhsb th{
+            background-color: #009587;
+            color: #ffffff;
+
+        }
+        .clwzxlk{
+             width: 530px;
+             height: 800px;
+             position: absolute;
+             left: 80px;
+             top: 78px;
+             border: 1px solid black;
+             background-color: #fdfdfe;
+             display: none;
+             overflow-x: auto;
+             overflow-y: auto;
+             /*background-color: black;*/
+         }
+        .tree-container {
+            border-radius: 4px;
+
+            width: 500px; /* 新增：固定宽度300px */
+            overflow-x: auto; /* 新增：水平溢出时显示滚动条 */
+            overflow-y: auto; /* 新增：水平溢出时显示滚动条 */
+        }
+    </style>
+
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="treedata.js"></script>
+
+</head>
+
+
+<body style="overflow: hidden">
+
+<div id="title_fhsb">&nbsp;&nbsp;&nbsp;负荷时比分析</div>
+<div id="body_fhsb">
+    <div id="uilt1_fhsb">
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 10px">测量位置:</label>
+<!--        <input type="text" id="pds" placeholder="401：低压进线——" class="layui-input" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">-->
+        <input type="text" id="pds" onclick="clwzdj()" value="1AA6-1:6号核心筒照明1" class="layui-input" style="width: 200px;">
+
+        <div style="width: 10px"></div>
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 10px">第一时间:</label>
+        <input type="text" class="layui-input" id="test1" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+
+        <label  style="padding-top: 10px;margin-right: 10px;margin-left: 10px">第二时间:</label>
+        <input type="text" class="layui-input"  id="test2" style="width: 200px;border: 2px solid rgba(24,24,24,0.98);">
+
+        <button class="layui-btn" style="margin-left: 20px" id="DFchaxun" onclick="DFchaxun()" >查询</button>
+        <button class="layui-btn layui-btn-normal" style="margin-left: 20px" id="exportExcelBtn">导出Excel报表</button>
+
+    </div>
+    <div id="uilt2_fhsb" >
+
+    </div>
+    <div id="uilt3_fhsb">
+        <table id="fhsb_table"  style="margin: 0px"></table>
+    </div>
+</div>
+
+<div style="" class="clwzxlk" id="navTree">
+    <div class="tree-container">
+        <div id="treeRoot"></div>
+    </div>
+</div>
+<script>
+
+
+
+    $ =layui.jquery;    // 简化后的导航数据
+    var cmsclwz ="";
+    layui.use('tree', function(){
+        const tree = layui.tree;
+        const layer = layui.layer;
+        tree.render({
+            elem: '#navTree',
+            data: treedata,
+            showLine: true,
+            className: 'custom-tree-class',
+            click: function (obj) {
+                document.getElementById('pds').value=obj.data.title;
+                cmsclwz =obj.data.extraInfo;
+                // document.getElementById("navTree").style.display ='none';
+            }
+        });
+    });
+    // 页面加载完成后执行
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     // 获取今日日期
+    //     const today = new Date();
+    //
+    //     // 获取年、月、日
+    //     const year = today.getFullYear();
+    //     // 月份从0开始，所以要加1
+    //     const month = String(today.getMonth() + 1).padStart(2, '0');
+    //     const months = String(today.getMonth()).padStart(2, '0');
+    //     const day = String(today.getDate()).padStart(2, '0');
+    //     const days = String(today.getDate() -1).padStart(2, '0');
+    //
+    //     // 组合成"YYYY-MM-DD"格式
+    //     const formattedDate = `${year}-${month}-${day}`;
+    //     const formattedDates = `${year}-${months}-${days}`;
+    //
+    //     // 设置到input框中
+    //     // document.getElementById('startDates').value = formattedDate;
+    //     // document.getElementById('startDate').value = formattedDates;
+    //
+    // });
+    function clwzdj(){
+        document.getElementById("navTree").style.display ='block';
+    }
+    document.addEventListener('click', function (event) {
+        const target = event.target;
+            
+        if (target.id !== 'pds' && !target.classList.contains('layui-icon')&& !target.classList.contains('node-checkbox')    ) {
+            // 在此处添加点击物体class不为aaa时要执行的代码
+            document.getElementById("navTree").style.display ='none';
+            //隐藏菜单时获取内容
+            const selects = [];
+            document.querySelectorAll('.node-checkbox:checked').forEach(checkbox => {
+                selects.push(JSON.parse(checkbox.dataset.node));
+            });
+        }
+    });
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        var today = new Date();
+        var thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        var currentDate = formatDate(today);
+        var currentDates = formatDate(thirtyDaysAgo);
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#test1' //指定元素
+            , value: currentDates
+        });
+        laydate.render({
+            elem: '#test2' //指定元素
+            , value: currentDate
+        });
+    });
+
+    function bgpz(data1,data2,dataname1,dataname2){
+        // 计算极值和时间函数
+        function calculateExtremes(data) {
+            let maxValue = -Infinity;
+            let minValue = Infinity;
+            let maxTime = '';
+            let minTime = '';
+            
+            data.forEach(item => {
+                const value = item[1];
+                const date = item[0];
+                
+                // 格式化时间，只保留时分
+                const timeStr = formatTime(date);
+                
+                // 更新最大值
+                if (value > maxValue) {
+                    maxValue = value;
+                    maxTime = timeStr;
+                }
+                
+                // 更新最小值
+                if (value < minValue) {
+                    minValue = value;
+                    minTime = timeStr;
+                }
+            });
+            
+            return {
+                maxValue: maxValue.toFixed(2),
+                minValue: minValue.toFixed(2),
+                maxTime: maxTime,
+                minTime: minTime
+            };
+        }
+
+        // 时间格式化函数（修改为只返回时分）
+        function formatTime(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        
+        // 计算两组数据的极值
+        const result1 = calculateExtremes(data1, dataname1);
+        const result2 = calculateExtremes(data2, dataname2);
+
+         // 初始化表格
+        layui.use('table', function() {
+            var table = layui.table;
+            
+            // 渲染表格
+            table.render({
+                elem: '#fhsb_table',
+                cols: [[
+                    {field: 'number', title: '时间'},
+                    {field: 'power', title: '负荷最大值'},
+                    {field: 'proportion', title: '最大产生时间'},
+                    {field: 'loadRate', title: '负荷最小值'},
+                    {field: 'cms', title: '最小产生时间'}
+                ]],
+                data: [
+                    {
+                        number: '第一时间 ' + dataname1, 
+                        power: result1.maxValue, 
+                        proportion: result1.maxTime, 
+                        loadRate: result1.minValue, 
+                        cms: result1.minTime
+                    },
+                    {
+                        number: '第二时间 '+dataname2, 
+                        power: result2.maxValue, 
+                        proportion: result2.maxTime, 
+                        loadRate: result2.minValue, 
+                        cms: result2.minTime
+                    }
+                ],
+                height: 220,
+            });
+        });
+
+        function normalizeDates(data) {
+            return data.map(item => {
+                const date = new Date(item[0]);
+                            
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份从0开始，所以加1
+                const day = date.getDate().toString().padStart(2, '0');
+
+                const normalized = new Date(`2021-11-02 ${date.getHours()}:${date.getMinutes()}`);
+                // const normalized = new Date(data);
+                // console.log(normalized)
+                return [normalized, item[1]];
+            });
+        }
+        // 处理后的对比数据
+        const normalizedData1 = normalizeDates(data1);
+        const normalizedData2 = normalizeDates(data2);
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('uilt2_fhsb'));
+        // 生成X轴显示的整点时间（0:00-23:00）
+        const xAxisHours = [];
+        // for (let i = 0; i < 24; i++) {
+            // xAxisHours.push(new Date(`2021-11-02 ${i.toString().padStart(2, '0')}:00:00`));
+            // xAxisHours.push(i+":00"); // 只保留小时部分
+        // }
+        const fhsbname = document.getElementById('pds').value || '1AA6-1:6号核心筒照明1';
+        // 配置项
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function (params) {
+                let tooltipContent = '';
+                // 遍历所有系列的数据
+                params.forEach(function (item) {
+                    tooltipContent += item.seriesName +" : " + item.value[1] + '<br>';
+                });
+                return tooltipContent;
+            }
+            },
+            grid: {
+                left: "2%", // 图表距离容器左边框的距离，这里设置为10%
+                right: "4%", // 图表距离容器右边框的距离，这里设置为10%
+                bottom: "2%", // 图表距离容器下边框的距离，这里设置为10%
+                top: "20%", // 图表距离容器上边框的距离，这里设置为10%
+                containLabel: true // 确保grid区域包含坐标轴标签
+            },
+            title: {
+                text: fhsbname+'——负荷的分析',
+            },
+            legend: {
+                data: [dataname1, dataname2]
+            },
+            xAxis: {
+                type: 'time',
+                min: xAxisHours[0],      // 从0:00开始
+                max: xAxisHours[23],     // 到23:00结束
+                splitNumber: 24,          // 24个小时刻度
+                name: '时间/hh:mm',
+                axisLabel: {
+                    // 明确指定时间格式为小时:分钟
+                    formatter: function(value) {
+                        const date = new Date(value);
+                        // 补零处理，确保显示为00:00格式
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
+                    },
+                    interval: 3600 * 1000, // 每小时显示一个标签
+                },
+                splitLine: {
+                    show: true,       // 显示分割线
+                    interval: 'auto', // 自动根据splitNumber分配
+                    lineStyle: {
+                        color: '#ddd', // 线条颜色
+                        width: 1,      // 线条宽度
+                        type: 'solid'  // 线条类型
+                    }
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '总负荷/kW'
+            },
+            series: [
+                {
+                    name: dataname1,
+                    type: 'line',
+                    symbol: 'circle',
+                    symbolSize: 4,
+                    itemStyle: {
+                        color: 'red'
+                    },
+                    data: normalizedData1
+                },
+                {
+                    name: dataname2,
+                    type: 'line',
+                    symbol: 'circle',
+                    symbolSize: 4,
+                    itemStyle: {
+                        color: 'blue'
+                    },
+                    data: normalizedData2
+                }
+            ]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+
+    function DFchaxun(){
+        // myChart.dispose();
+        myChart = echarts.init(document.getElementById('uilt2_fhsb'));
+        //获取名字，时间
+        const fhsbname = document.getElementById('pds').value || '1AA6-1:6号核心筒照明1';
+        const fhsbdata1 = document.getElementById('test1').value || '2025-06-21';
+        const fhsbdata2 = document.getElementById('test2').value || '2025-06-23';
+
+        if (cmsclwz ==""){
+            cmsclwz ="1AA1-1";
+        }
+        //alert("name:"+fhsbname+"||"+fhsbdata1+"||"+fhsbdata2);
+        //发送ajax到后端，获取两个日期当天的所有数据，即两条集合，同时获取时间表list数据
+        // 假设你的后端接口是/api/power-data
+        $.ajax({
+            url: '/hdb/getfhsbfx',
+            data: {
+                dysj: fhsbdata1,
+                desj: fhsbdata2,
+                clwz: cmsclwz
+            },
+            success: function (response) {
+                console.log('服务器返回数据:', response);
+                const { dysj, desj } = response; // 获取两组数据
+                
+                // 数据转换函数：处理服务器返回格式，去除秒数，转换为 [Date, 数值] 格式
+                function formatServerData(serverData) {
+                    return serverData.map(item => {
+                        // 处理时间格式：去除秒数部分
+                        // 服务器时间格式：'2025-06-21T00:00:47' → 转换为 '2025-06-21 00:00'
+                        const timeStr = item.data
+                            .replace('T', ' ')       // 将T替换为空格
+                            .slice(0, 16);          // 截取到分钟部分（YYYY-MM-DD HH:MM）
+                        // 转换为 [Date对象, 数值] 格式
+                        return [
+                            new Date(timeStr),       // 日期对象（不含秒数）
+                            parseFloat(item.W)       // 负荷值
+                        ];
+                    });
+                }
+                
+                // 转换两组数据为目标格式
+                const formattedDysj = formatServerData(dysj);
+                const formattedDesj = formatServerData(desj);
+                
+                // 直接调用之前的函数生成图表（假设函数名为 bgpz）
+                // 注意：这里使用原始日期（而非归一化日期），如果需要时间对齐需在 bgpz 函数中处理
+                bgpz(formattedDysj, formattedDesj, fhsbdata1 , fhsbdata2);
+                
+            },
+            error: function(err) {
+                console.error('获取数据失败:', err);
+            }
+        });
+
+    }
+    // 负荷时比分析Excel导出函数
+    // 负荷时比分析Excel导出函数
+    async function exportFHSBToExcel() {
+        try {
+            // 1. 获取页面当前信息
+            const clwz = document.getElementById('pds').value || '未知位置';
+            const date1 = document.getElementById('test1').value;
+            const date2 = document.getElementById('test2').value;
+
+            // 2. 获取ECharts图表实例和图片
+            const myChart = echarts.getInstanceByDom(document.getElementById('uilt2_fhsb'));
+            if (!myChart) {
+                layer.msg('未找到图表，请先进行查询');
+                return;
+            }
+            const chartImageURL = myChart.getDataURL({
+                type: 'png',
+                pixelRatio: 2,
+                backgroundColor: '#fff'
+            });
+
+            // 3. 获取Layui表格中的数据
+            const table = layui.table;
+            const tableData = table.cache['fhsb_table'] || [];
+
+            // 4. 获取图表对应的原始序列数据
+            const option = myChart.getOption();
+            const seriesData1 = option.series[0]?.data || [];
+            const seriesData2 = option.series[1]?.data || [];
+
+            // 5. 创建Excel工作簿和工作表
+            const workbook = new ExcelJS.Workbook();
+            workbook.views = [{
+                showGridLines: true,
+                defaultFont: {
+                    name: '宋体',
+                    size: 11
+                }
+            }];
+
+            const mainSheet = workbook.addWorksheet('负荷时比分析');
+            const detailSheet = workbook.addWorksheet('详细数据');
+
+            // 定义对齐样式
+            const centerAlign = { horizontal: 'center', vertical: 'middle' };
+            const leftAlign = { horizontal: 'left', vertical: 'middle' };
+            const rightAlign = { horizontal: 'right', vertical: 'middle' };
+
+            // 6. 构建主工作表（负荷时比分析）
+            // 6.1 设置列宽（A到O列，共15列）
+            const columnWidths = [];
+            for (let i = 0; i < 15; i++) {
+                columnWidths.push({ width: 10 });
+            }
+            mainSheet.columns = columnWidths;
+
+            // 6.2 添加标题
+            mainSheet.mergeCells('A1:O1');
+            const titleCell = mainSheet.getCell('A1');
+            titleCell.value = `${clwz} - 负荷时比分析报表`;
+            titleCell.font = { bold: true, size: 16, name: '宋体' };
+            titleCell.alignment = centerAlign;
+
+            // 第二行：左侧信息
+            mainSheet.mergeCells('A2:G2');
+            mainSheet.getCell('A2').value = `对比时段: ${date1} 与 ${date2}`;
+            mainSheet.getCell('A2').font = { name: '宋体', size: 11 };
+            mainSheet.getCell('A2').alignment = leftAlign;
+
+            // 第二行：右侧信息（生成时间）
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            mainSheet.mergeCells('I2:O2');
+            mainSheet.getCell('I2').value = `生成时间: ${formattedDate}`;
+            mainSheet.getCell('I2').font = { name: '宋体', size: 11 };
+            mainSheet.getCell('I2').alignment = rightAlign;
+
+            // 6.3 添加图表图片
+            const imageId = workbook.addImage({
+                base64: chartImageURL,
+                extension: 'png'
+            });
+            mainSheet.mergeCells('A4:O20');
+            mainSheet.addImage(imageId, {
+                tl: { col: 0.1, row: 3.1 },
+                br: { col: 14.9, row: 19.9 },
+                editAs: 'absolute'
+            });
+
+            // 6.4 添加汇总数据表格（让表格宽度与图表一致）
+            const tableStartRow = 22;
+            const tableHeaders = ['时间', '负荷最大值(kW)', '最大产生时间', '负荷最小值(kW)', '最小产生时间'];
+
+            // 让5列表格占满15列（每列占3列宽度）
+            const totalColumns = 15;
+            const tableColumns = 5;
+            const columnSpan = 3; // 每个表头占据3列
+
+            // 添加表头（合并单元格）
+            tableHeaders.forEach((header, index) => {
+                const startColIndex = index * columnSpan;
+                const endColIndex = startColIndex + columnSpan - 1;
+                const startCell = String.fromCharCode(65 + startColIndex) + tableStartRow;
+                const endCell = String.fromCharCode(65 + endColIndex) + tableStartRow;
+                mainSheet.mergeCells(`${startCell}:${endCell}`);
+
+                const cell = mainSheet.getCell(startCell);
+                cell.value = header;
+                cell.font = { bold: true, name: '宋体', size: 11 };
+                cell.alignment = centerAlign;
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0E0E0' }
+                };
+            });
+
+            // 添加数据行（合并单元格）
+            if (tableData && tableData.length > 0) {
+                tableData.forEach((row, rowIndex) => {
+                    const dataRow = tableStartRow + 1 + rowIndex;
+                    const fields = ['number', 'power', 'proportion', 'loadRate', 'cms'];
+
+                    fields.forEach((field, colIndex) => {
+                        const startColIndex = colIndex * columnSpan;
+                        const endColIndex = startColIndex + columnSpan - 1;
+                        const startCell = String.fromCharCode(65 + startColIndex) + dataRow;
+                        const endCell = String.fromCharCode(65 + endColIndex) + dataRow;
+                        mainSheet.mergeCells(`${startCell}:${endCell}`);
+
+                        const cell = mainSheet.getCell(startCell);
+                        cell.value = row[field];
+                        cell.font = { name: '宋体', size: 11 };
+                        cell.alignment = centerAlign;
+                    });
+                });
+
+                // 添加边框
+                const tableEndRow = tableStartRow + tableData.length;
+                for (let r = tableStartRow; r <= tableEndRow; r++) {
+                    for (let c = 0; c < totalColumns; c++) {
+                        const cell = mainSheet.getCell(r, c + 1);
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                    }
+                }
+            }
+
+            // 6.5 添加说明
+            const infoRow = tableStartRow + (tableData ? tableData.length + 2 : 3);
+            mainSheet.mergeCells(`A${infoRow}:O${infoRow}`);
+            const infoCell = mainSheet.getCell(`A${infoRow}`);
+            infoCell.value = '注：以上数据为系统自动生成，具体数据以实际测量为准。';
+            infoCell.font = { name: '宋体', size: 10, color: { argb: 'FF808080' } };
+            infoCell.alignment = centerAlign;
+
+            // 7. 构建详细数据工作表（保持不变）
+            detailSheet.columns = [
+                { width: 15 },
+                { width: 20 },
+                { width: 20 },
+                { width: 20 },
+            ];
+
+            detailSheet.mergeCells('A1:D1');
+            const detailTitleCell = detailSheet.getCell('A1');
+            detailTitleCell.value = `${clwz} - 详细负荷数据对比`;
+            detailTitleCell.font = { bold: true, size: 14, name: '宋体' };
+            detailTitleCell.alignment = centerAlign;
+
+            detailSheet.getCell('A2').value = '时间 (HH:MM)';
+            detailSheet.getCell('B2').value = `${date1} 负荷(kW)`;
+            detailSheet.getCell('C2').value = `${date2} 负荷(kW)`;
+            detailSheet.getCell('D2').value = '差值 (kW)';
+
+            for (let col = 1; col <= 4; col++) {
+                const cell = detailSheet.getCell(2, col);
+                cell.font = { bold: true, name: '宋体', size: 11 };
+                cell.alignment = centerAlign;
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0E0E0' }
+                };
+            }
+
+            const maxLength = Math.max(seriesData1.length, seriesData2.length);
+            for (let i = 0; i < maxLength; i++) {
+                const rowIndex = 3 + i;
+                let timeStr = '';
+                let value1 = null;
+                let value2 = null;
+
+                if (seriesData1[i] && seriesData1[i].length >= 2) {
+                    if (seriesData1[i][0] instanceof Date) {
+                        const date = seriesData1[i][0];
+                        timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    }
+                    value1 = seriesData1[i][1];
+                }
+
+                if (seriesData2[i] && seriesData2[i].length >= 2) {
+                    if (!timeStr && seriesData2[i][0] instanceof Date) {
+                        const date = seriesData2[i][0];
+                        timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    }
+                    value2 = seriesData2[i][1];
+                }
+
+                if (!timeStr) {
+                    timeStr = `${(i + 1).toString().padStart(2, '0')}:00`;
+                }
+
+                const diff = (value1 !== null && value2 !== null) ? (value1 - value2).toFixed(2) : '';
+
+                detailSheet.getCell(`A${rowIndex}`).value = timeStr;
+                detailSheet.getCell(`B${rowIndex}`).value = value1 !== null ? value1 : '';
+                detailSheet.getCell(`C${rowIndex}`).value = value2 !== null ? value2 : '';
+                detailSheet.getCell(`D${rowIndex}`).value = diff;
+
+                for (let col = 1; col <= 4; col++) {
+                    const cell = detailSheet.getCell(rowIndex, col);
+                    cell.font = { name: '宋体', size: 11 };
+                    cell.alignment = (col === 1) ? centerAlign : rightAlign;
+
+                    if (col === 4 && diff !== '') {
+                        const numDiff = parseFloat(diff);
+                        if (numDiff > 0) {
+                            cell.font.color = { argb: 'FFFF0000' };
+                        } else if (numDiff < 0) {
+                            cell.font.color = { argb: 'FF008000' };
+                        }
+                    }
+                }
+            }
+
+            for (let r = 2; r <= (maxLength + 2); r++) {
+                for (let c = 1; c <= 4; c++) {
+                    const cell = detailSheet.getCell(r, c);
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                }
+            }
+
+            if (maxLength > 0) {
+                const statsRow = maxLength + 3;
+                detailSheet.mergeCells(`A${statsRow}:A${statsRow}`);
+                detailSheet.getCell(`A${statsRow}`).value = '统计';
+                detailSheet.getCell(`A${statsRow}`).font = { bold: true, name: '宋体', size: 11 };
+                detailSheet.getCell(`A${statsRow}`).alignment = centerAlign;
+
+                const avg1 = seriesData1.length > 0 ?
+                    (seriesData1.reduce((sum, item) => sum + (item[1] || 0), 0) / seriesData1.length).toFixed(2) : '';
+                const avg2 = seriesData2.length > 0 ?
+                    (seriesData2.reduce((sum, item) => sum + (item[1] || 0), 0) / seriesData2.length).toFixed(2) : '';
+
+                detailSheet.getCell(`B${statsRow}`).value = avg1 ? `平均值: ${avg1}` : '';
+                detailSheet.getCell(`C${statsRow}`).value = avg2 ? `平均值: ${avg2}` : '';
+
+                for (let c = 1; c <= 4; c++) {
+                    const cell = detailSheet.getCell(statsRow, c);
+                    if (c === 1) continue;
+                    cell.font = { name: '宋体', size: 11 };
+                    cell.alignment = rightAlign;
+                }
+            }
+
+            // 8. 生成并下载文件
+            const buffer = await workbook.xlsx.writeBuffer();
+            const fileName = `负荷时比分析_${clwz}_${date1}_${date2}_${new Date().getTime()}.xlsx`;
+
+            saveAs(new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }), fileName);
+
+            layer.msg(`Excel报表已生成: ${fileName}`);
+
+        } catch (error) {
+            console.error('导出Excel时发生错误:', error);
+            layer.msg('导出失败: ' + error.message);
+        }
+    }
+
+    // 为导出按钮绑定点击事件
+    document.addEventListener('DOMContentLoaded', function() {
+        const exportBtn = document.getElementById('exportExcelBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                exportFHSBToExcel();
+            });
+        } else {
+            console.warn('未找到导出按钮，请确保页面中存在id为"exportExcelBtn"的按钮');
+        }
+    });
+
+    // 页面加载完成后自动执行查询
+    window.onload = function() {
+        DFchaxun();
+    };
+</script>
+</body>
+</html>

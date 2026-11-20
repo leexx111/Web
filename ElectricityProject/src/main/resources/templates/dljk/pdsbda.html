@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>配电设备档案</title>
+
+
+    <style>
+        #title_zxjt{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*padding-left: 10px;*/
+            /*border: 1px solid #c7c7c5;*/
+
+        }
+        /* 整体布局 */
+        .sys-container {
+            display: flex;
+            height: 100vh;
+            background: #f8f8f8;
+        }
+
+        /* 左侧导航优化 */
+        #navTree {
+            width: 280px;
+            background: #fff;
+            padding: 15px 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .layui-tree-txt {
+            font-size: 14px !important;
+            color: #333 !important;
+            padding-left: 8px !important;
+        }
+        .layui-tree-entry:hover {
+            background: #f0f9ff !important;
+        }
+
+        /* 右侧表格区域 */
+        .data-panel {
+            flex: 1;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        /* 表格板块样式 */
+        .param-block {
+            margin-bottom: 25px;
+            border: 1px solid #e6e6e6;
+            background: #fff;
+            border-radius: 3px;
+        }
+        .param-title {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e6e6e6;
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+        }
+        .layui-table {
+            margin: 0 !important;
+        }
+        .device-count {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .count-item {
+            border: 1px solid #99BBE8;
+            width: 240px;
+            height: 120px;
+            text-align: center;
+
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .count-item-title {
+            background-color: #0066CC;
+            color: white;
+            padding: 5px 0;
+        }
+
+        .count-item-num {
+            font-size: 24px;
+            color: #0066CC;
+            padding-top: 10px;
+        }
+        .sbtz{
+            margin-top: 40px;
+        }
+    </style>
+    <script src="../../static/layui/layui.js"></script>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+
+</head>
+<body>
+
+<div id="title_zxjt" >&nbsp;&nbsp;&nbsp;配电设备档案</div>
+
+<div class="sys-container">
+    <!-- 简化后的导航树 -->
+    <div id="navTree" class="layui-box layui-tree"></div>
+
+    <!-- 数据展示区域 -->
+    <div class="data-panel layui-tab layui-tab-card">
+        <!-- 顶部标题和设备总数 -->
+        <div class="header">
+            <div style="font-size: 20px" class="pdsbdat">
+                北京亚洲金融大厦
+            </div>
+            <div style="padding-top: 15px">设备总数（<span style="color: #01aaed;">455</span>）</div>
+            <br>
+            <div style="width: 98%;margin-left: 0%;border:1px solid rgba(0,0,0,0.37)"></div>
+        </div>
+
+
+        <!-- 设备数量展示 -->
+        <div class="device-count">
+            <div class="count-item">
+                <div class="count-item-title">变压器</div>
+                <div class="count-item-num">26</div>
+            </div>
+            <div class="count-item">
+                <div class="count-item-title">高压柜</div>
+                <div class="count-item-num">58</div>
+            </div>
+            <div class="count-item">
+                <div class="count-item-title">低压柜</div>
+                <div class="count-item-num">299</div>
+            </div>
+            <div class="count-item">
+                <div class="count-item-title">低压电容柜</div>
+                <div class="count-item-num">52</div>
+            </div>
+            <div class="count-item">
+                <div class="count-item-title">直流屏</div>
+                <div class="count-item-num">20</div>
+            </div>
+        </div>
+
+<!--        设备台账-->
+        <div class="sbtz">
+            <div style="font-size: 20px">
+                设备台账
+            </div>
+
+
+            <!-- 表格查询区域 -->
+            <div class="search-bar layui-form"  style="display: flex;margin: 2px;padding:6px;border:1px solid rgba(0,0,0,0.12);
+            border-radius: 8px;box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);">
+                <!--    <input type="text" placeholder="所属配电室: 全部" class="layui-input" style="width: 150px;">-->
+                <span style="padding-top: 10px">所属配电室:</span>
+                <select  style="width: 100px;">
+                    <option value="">全部</option>
+                    <option value="变压器">变压器</option>
+                    <option value="高压柜">高压柜</option>
+                    <option value="低压柜">低压柜</option>
+                    <option value="低压电容柜">低压电容柜</option>
+                    <option value="直流屏">直流屏</option>
+                </select>
+                <div style="width: 20px"></div>
+                <span style="padding-top: 10px">设备类型:</span>
+                <select  style="width: 100px;">
+                    <option value="">全部</option>
+                    <option value="变压器">变压器</option>
+                    <option value="高压柜">高压柜</option>
+                    <option value="低压柜">低压柜</option>
+                    <option value="低压电容柜">低压电容柜</option>
+                    <option value="直流屏">直流屏</option>
+                </select>
+                <!--    <span style="padding-top: 10px">所属配电室:</span>-->
+                <div style="width: 20px"></div>
+
+                <span style="padding-top: 10px">生产厂家:</span>
+                <input type="text" placeholder="请输入生产厂家" class="layui-input" style="width: 150px; display: inline-block;">
+                <div style="width: 20px"></div>
+                <span style="padding-top: 10px">出厂时间:</span>
+                <input type="text" placeholder="请选择起始日期" class="layui-input layui-date" id="startDate" style="width: 150px; display: inline-block;">
+                <span style="padding-top: 10px">-</span>
+                <input type="text" placeholder="请选择终止日期" class="layui-input layui-date" id="endDate"
+                       style="width: 150px; display: inline-block;">
+                <button class="layui-btn" lay-submit lay-filter="search" style="margin-left: 20px">查询</button>
+            </div>
+
+            <!-- 设备台账表格 -->
+            <table id="deviceTable" lay-filter="deviceTable"></table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $ =layui.jquery;
+    // 简化后的导航数据
+    layui.use('tree', function(){
+        const tree = layui.tree;
+        const layer = layui.layer;
+        tree.render({
+            elem: '#navTree',
+            data: [
+                {
+                    title: '北京亚洲金融大厦',
+                    spread: true, // 设置此节点默认展开
+                    children: [
+                        {title: '西区1#配电室'}
+                    ]
+                }
+            ],
+            showLine: true,
+            click: function (obj) {
+                // obj 包含了被点击节点的相关信息
+                // layer.msg(obj.data.title); // 使用 Layui 的 layer 组件弹出提示框，显示节点的 title
+                $('.pdsbdat').text(obj.data.title);
+            }
+        });
+    });
+
+
+    layui.use(['table', 'form', 'laydate'], function () {
+        var table = layui.table;
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+        // 日期选择器
+        laydate.render({
+            elem: '#startDate'
+        });
+        laydate.render({
+            elem: '#endDate'
+        });
+
+        // 表格数据
+        var tableData = [
+            { id: 1, name: '亚投行1#配电室', device: '1#变压器', manufacturer: '顺德电器有限公司', model: 'SCB13-2000kVA', date: '', num: 1 },
+            { id: 2, name: '亚投行1#配电室', device: '2#变压器', manufacturer: '顺德电器有限公司', model: 'SCB13-2000kVA', date: '', num: 1 },
+            { id: 3, name: '亚投行1#配电室', device: '3#变压器', manufacturer: '顺德电器有限公司', model: 'SCB13-2000kVA', date: '', num: 1 },
+            { id: 4, name: '亚投行1#配电室', device: '4#变压器', manufacturer: '顺德电器有限公司', model: 'SCB13-2000kVA', date: '', num: 1 },
+            { id: 5, name: '亚投行1#配电室', device: '直流屏', manufacturer: '北京长河机电有限公司', model: 'PGD30-100AH/110V', date: '2019-02-27', num: 4 },
+            { id: 6, name: '亚投行1#配电室', device: '低压电容柜', manufacturer: '北京福斯特开关设备有限公司', model: 'Blokset', date: '2019-02-03', num: 8 },
+            { id: 7, name: '亚投行1#配电室', device: '高压柜', manufacturer: '施耐德电气（厦门）开关电器有限公司', model: 'PIX-12', date: '2019-02-16', num: 1 },
+            { id: 8, name: '亚投行1#配电室', device: '高压柜', manufacturer: '施耐德电气（厦门）开关电器有限公司', model: 'PIX-12', date: '2019-02-15', num: 1 },
+            { id: 9, name: '亚投行1#配电室', device: '高压柜', manufacturer: '施耐德电气（厦门）开关电器有限公司', model: 'PIX-12', date: '2019-02-14', num: 1 },
+            { id: 10, name: '亚投行1#配电室', device: '高压柜', manufacturer: '施耐德电气（厦门）开关电器有限公司', model: 'PIX-12', date: '2019-02-13', num: 1 }
+        ];
+
+        // 初始化表格
+        table.render({
+            elem: '#deviceTable',
+            url: '', // 数据接口
+            page: true,
+            limit: 10,
+            cols: [[
+                {field: 'seq', title: '序号', width: 80},
+                {field: 'room', title: '配电室名称'},
+                {field: 'name', title: '设备名称'},
+                {field: 'factory', title: '生产厂家'},
+                {field: 'model', title: '设备型号'},
+                {field: 'date', title: '出厂日期'},
+                {field: 'quantity', title: '数量', width: 100},
+                {field: 'operate', title: '操作', toolbar: '#operateBar', width: 120}
+            ]],
+            data: [{
+                seq: 1,
+                room: "亚投行1#配电室",
+                name: "1#变压器",
+                factory: "顺德电器有限公司",
+                model: "SCB13-2000kVA",
+                date: "",
+                quantity: 1
+            },{
+                seq: 5,
+                room: "亚投行1#配电室",
+                name: "直流屏",
+                factory: "北京长河机电有限公司",
+                model: "PGD30-100AH/110V",
+                date: "2019-02-27",
+                quantity: 4
+            },{
+                seq: 8,
+                room: "亚投行1#配电室",
+                name: "高压柜",
+                factory: "施耐德电气（厦门）开关电器有限公司",
+                model: "PIX-12",
+                date: "2019-02-15",
+                quantity: 1
+            }]
+        });
+
+        // // 操作列模板
+        // table.template('operateTpl',
+        //     '<i class="layui-icon layui-icon-search" style="cursor: pointer;"></i>'
+        // );
+
+        // 搜索功能（此处简单模拟，实际需与后端交互）
+        form.on('submit(search)', function (data) {
+            console.log(data.field);
+            // 可在此处根据搜索条件重新渲染表格
+            return false;
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>表计数据监测</title>
+
+    <style>
+        #title_dnzljc{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            /*border: 1px solid #c7c7c5;*/
+        }
+        /* 整体布局 */
+        .sys-container {
+            display: flex;
+            height: 100vh;
+            background: #f8f8f8;
+        }
+
+        /* 左侧导航优化 */
+        #navTree {
+            width: 350px;
+            background: #fff;
+            padding: 15px 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .layui-tree-txt {
+            font-size: 14px !important;
+            color: #333 !important;
+            padding-left: 8px !important;
+        }
+        .layui-tree-entry:hover {
+            background: #f0f9ff !important;
+        }
+
+        /* 右侧表格区域 */
+        .data-panel {
+            flex: 1;
+            padding-left: 20px;
+            position: relative;
+            padding-top: 0;
+        }
+
+        /* 表格板块样式 */
+        .param-block {
+            margin-bottom: 25px;
+            border: 1px solid #e6e6e6;
+            background: #fff;
+            border-radius: 3px;
+        }
+        .param-title {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e6e6e6;
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+        }
+        .layui-table {
+            margin: 0 !important;
+        }
+        .layui-table thead th {
+            background: #e5e5e5 !important;
+            font-family: Arial !important;
+            font-size: 14px !important;
+            color: #666 !important;
+            border-bottom: 1px solid #dcdcdc !important;
+            text-align: center;
+            padding-top:8px!important;
+            padding-bottom:8px!important;
+        }
+        .layui-table td {
+            font-size: 13px !important;
+            color: #333 !important;
+            height: 25px;
+            /*padding: 8px 10px !important;*/
+
+            padding-top:8px!important;
+            padding-bottom:8px!important;
+            text-align: center;
+        }
+
+        /* 右上角操作栏 */
+        .data-header {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            width: 98%;
+            /*align-items: center;*/
+            gap: 15px;
+        }
+        .collectTime {
+            font-size: 12px;
+            color: #999;
+            padding-top: 10px;
+        }
+        #dataCall {
+            background: #1E9FFF;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 3px;
+            transition: transform 0.2s;
+        }
+        #dataCall:active {
+            transform: scale(0.95);
+        }
+        .dbczl{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .layui-tree {
+            /*max-width: 400px; !* 可根据需要调整 *!*/
+            overflow-x: auto;
+            /*overflow-y: hidden;*/
+            white-space: nowrap;
+            height: 800px;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <script src="treedata.js"></script>
+
+</head>
+<body>
+
+<div id="title_dnzljc">&nbsp;&nbsp;&nbsp;表计数据监测</div>
+<div class="sys-container">
+    <!-- 简化后的导航树 -->
+    <div id="navTree" class="layui-box layui-tree"></div>
+
+    <!-- 数据展示区域 -->
+    <div class="data-panel layui-tab layui-tab-card" style="margin-top: 0">
+        <ul class="layui-tab-title">
+            <li class="layui-this">电能参数</li>
+            <li onclick="csjzdjcf()">参数极值</li>
+            <li onclick="xbcsdjcf()">谐波参数</li>
+        </ul>
+
+        <div class="layui-tab-content" style="padding: 10px;width: 95%">
+            <div class="layui-tab-item  layui-show" >
+<!--                电能参数-->
+                <!-- 顶部操作栏 -->
+                <div class="dbczl">
+                    <span style="" class="hxtkt" >401:2低压进线一</span>
+                    <div style="display: flex;gap: 10px">
+
+<!--                        <span style="" class="collectTime" id="collectTime">采集时间：2021-11-16 11:44:53</span>-->
+<!--                        <button  class="layui-btn layui-btn-normal">数据召唤</button>-->
+                    </div>
+                </div>
+
+                <!-- 表格区块容器 -->
+                <div style="margin-top: 10px;">
+                    <!-- 电能参数表格 -->
+                    <div class="param-block">
+                        <!--                <div class="param-title">电能参数</div>-->
+                        <table class="layui-table"  id="dnnjcs">
+                        </table>
+                    </div>
+
+                    <div class="param-block">
+                        <table class="layui-table" lay-size="sm" id="dnnjcs2"></table>
+                    </div>
+
+                    <div class="param-block">
+                        <!--                <div class="param-title">谐波参数</div>-->
+                        <table class="layui-table" lay-size="sm" id="dnnjcs3">
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <!--  参数极值-->
+                <!-- 顶部操作栏 -->
+                <div class="dbczl">
+                    <span style="" class="hxtkt">401:2低压进线一</span>
+                    <div style="display: flex;gap: 10px">
+
+<!--                        <span style="" class="collectTime" id="collectTimecsjz">采集时间：2021-11-16 11:44:53</span>-->
+<!--                        <button  class="layui-btn layui-btn-normal">数据召唤</button>-->
+                    </div>
+                    <!--            <button id="dataCall" class="layui-btn layui-btn-normal">数据召唤</button>-->
+                </div>
+
+                <table id="csjz"></table>
+                <!-- 表格区块容器 -->
+            </div>
+            <div class="layui-tab-item">
+            <!--谐波参数-->
+
+                <div class="dbczl">
+                    <span style="" class="hxtkt">401:2低压进线一</span>
+                    <div style="display: flex;gap: 10px">
+
+<!--                        <span style="" class="collectTime" id="collectTimexbcs">采集时间：2021-11-16 11:44:53</span>-->
+<!--                        <button  class="layui-btn layui-btn-normal">数据召唤</button>-->
+                    </div>
+                    <!--            <button id="dataCall" class="layui-btn layui-btn-normal">数据召唤</button>-->
+                </div>
+                <table id="xbcs"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $ =layui.jquery;    // 简化后的导航数据
+    layui.use('tree', function(){
+        const tree = layui.tree;
+        const layer = layui.layer;
+        tree.render({
+            elem: '#navTree',
+            data: treedata,
+            showLine: true,
+            id: 'demoId1',
+            accordion: false, // 允许多个父节点展开
+            click: function (obj) {
+                // obj 包含了被点击节点的相关信息
+                // layer.msg(obj.data.title); // 使用 Layui 的 layer 组件弹出提示框，显示节点的 title
+                $('.hxtkt').text(obj.data.title);
+                dncsbjcs(obj.data.extraInfo);
+            }
+        });
+    });
+    //打开页面自动渲染一次
+    dncsbjcs("1AA1-1");
+    function dncsbjcs(cms){
+        localStorage.setItem('bjsjjc',cms);
+        layui.use('table', function () {
+            var table = layui.table;
+            table.render({
+                elem: '#dnnjcs',
+                url: '/hdb/dnnjcs', // 数据接口
+                cols: [[
+                    {field: 'number', title: '表计参数',width:'19.8%'},
+                    {field: 'zong', title: '总',width:'20%'},
+                    {field: 'ady', title: 'A相',width:'20%'},
+                    {field: 'dby', title: 'B相',width:'20%'},
+                    {field: 'cdy', title: 'C相',width:'20%'},
+                ]],
+                where: {
+                    id: cms, // 自定义参数1，可根据需求修改键名和值
+                },
+                parseData: function (res) { // 解析数据
+                    var dataArray = [];
+                    if (res && Array.isArray(res)) {
+                        res.forEach(function (innerList) {
+                            if (Array.isArray(innerList)) {
+                                var rowData = {};
+                                innerList.forEach(function (value, index) {
+                                    switch (index) {
+                                        case 0:
+                                            rowData.number = value;
+                                            break;
+                                        case 1:
+                                            rowData.zong = value;
+                                            break;
+                                        case 2:
+                                            rowData.ady = value;
+                                            break;
+                                        case 3:
+                                            rowData.dby = value;
+                                            break;
+                                        case 4:
+                                            rowData.cdy = value;
+                                            break;
+                                    }
+                                });
+                                dataArray.push(rowData);
+                            }
+                        });
+                    }
+                    return {
+                        "code": 0,
+                        "msg": "",
+                        "count": dataArray.length,
+                        "data": dataArray
+                    };
+                },
+                margin: 0,
+                // height: '100%'
+            });
+            table.render({
+                elem: '#dnnjcs2',
+                url: '/hdb/dnnjcs2', // 数据接口
+                cols: [[
+                    {field: 'number', title: '零序电流(A)',width:'25%'},
+                    {field: 'zong', title: '频率(HZ)',width:'25%'},
+                    {field: 'ady', title: '总电压谐波含量(V)',width:'25%'},
+                    {field: 'dby', title: '总电流谐波含量(A)',width:'24.8%'},
+                ]],
+                where: {
+                    id: cms, // 自定义参数1，可根据需求修改键名和值
+                },
+                margin: 0,
+                parseData: function (dataFromBackend) {
+                    let newData = [
+                        {
+                            number: dataFromBackend.number,
+                            zong: dataFromBackend.zong ,
+                            ady: dataFromBackend.ady ,
+                            dby: dataFromBackend.dby
+                        }
+                    ];
+                    return {
+                        "code": 0, // 解析接口状态
+                        "msg": "", // 解析提示文本
+                        "count": 1, // 解析数据长度
+                        "data": newData // 解析数据列表
+                    };
+                }
+                // height: '100%'
+            });
+            table.render({
+                elem: '#dnnjcs3',
+
+                url: '/hdb/dnnjcs3',
+                cols: [[
+                    {field: 'number', title: '参数',rowspan:2,width:"30%"},
+                    {title: '有功(KWh)',colspan:2},
+                    {title: '无功(kVarh)',colspan:2}
+                ],[
+                    {field: 'yzx', title: '正向',width:"17.5%"},
+                    {field: 'yfx', title: '反向',width:"17.5%"},
+                    {field: 'wzx', title: '正向',width:"17.5%"},
+                    {field: 'wfx', title: '反向',width:"17.4%"}
+                ]
+                ],
+
+                where: {
+                    id: cms, // 自定义参数1，可根据需求修改键名和值
+                },
+                margin: 0,
+                parseData: function (dataFromBackend) {
+                    let newData = [
+                        {
+                            number: dataFromBackend.number,
+                            yzx: dataFromBackend.yzx ,
+                            wzx: dataFromBackend.wzx ,
+                            wfx: dataFromBackend.wfx
+                        }
+                    ];
+                    return {
+                        "code": 0, // 解析接口状态
+                        "msg": "", // 解析提示文本
+                        "count": 1, // 解析数据长度
+                        "data": newData // 解析数据列表
+                    };
+                }
+                // height: '100%'
+            });
+        });
+    }
+
+    function xbcsdjcf(){
+        layui.use('table', function () {
+            var table = layui.table;
+            table.render({
+                elem: '#xbcs',
+                cols: [[
+                    {field: 'number', title: '参数',width:'15%'},
+                    {field: 'ady', title: 'A相电压',width:'10%'},
+                    {field: 'dby', title: 'B相电压',width:'10%'},
+                    {field: 'cdy', title: 'C相电压',width:'10%'},
+                    {field: 'adl', title: 'A相电流',width:'10%'},
+                    {field: 'bdl', title: 'B相电流',width:'10%'},
+                    {field: 'cdl', title: 'C相电流',width:'10%'},
+                ]],
+                data: [
+                    {number: '总谐波畸变率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '2次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '3次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '4次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '5次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '6次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '7次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '8次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '9次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '10次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '11次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '12次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '13次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '14次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '15次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '16次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '17次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '18次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                    {number: '19次谐波占有率', ady: "-", dby: "-", cdy: '-',adl:'-',bdl:'-',cdl:'-'},
+                ],
+                margin: 0,
+                // height: '100%'
+            });
+        });
+    }
+    function csjzdjcf(){
+        layui.use('table', function () {
+            var table = layui.table;
+
+            var cms = localStorage.getItem('bjsjjc');
+            table.render({
+                elem: '#csjz',
+                url: '/hdb/getcsjz', // 数据接口
+                cols: [[
+                    {field: 'zhibiao', title: '指标', rowspan: 2,width:'20%'},
+                    {title: '极大值', colspan: 2},
+                    {title: '极小值', colspan: 2}
+                ],[
+                    {field: 'dshuju', title: '数据',width:'20%'},
+                    {field: 'dcssj', title: '产生时间',width:'20%'},
+                    {field: 'xshuju', title: '数据',width:'20%'},
+                    {field: 'xcssj', title: '产生时间',width:'19%'}
+                ]
+                ],
+                where: {
+                    id: cms, // 自定义参数1，可根据需求修改键名和值
+                },
+
+                parseData: function (res) { // 解析数据
+                    var dataArray = [];
+                    if (res && Array.isArray(res)) {
+                        res.forEach(function (innerList) {
+                            if (Array.isArray(innerList)) {
+                                var rowData = {};
+                                innerList.forEach(function (value, index) {
+                                    switch (index) {
+                                        case 0:
+                                            rowData.zhibiao = value;
+                                            break;
+                                        case 1:
+                                            rowData.dshuju = value;
+                                            break;
+                                        case 2:
+                                            rowData.dcssj = value;
+                                            break;
+                                        case 3:
+                                            rowData.xshuju = value;
+                                            break;
+                                        case 4:
+                                            rowData.xcssj = value;
+                                            break;
+                                    }
+                                });
+                                dataArray.push(rowData);
+                            }
+                        });
+                    }
+                    return {
+                        "code": 0,
+                        "msg": "",
+                        "count": dataArray.length,
+                        "data": dataArray
+                    };
+                },
+                margin: 0
+            });
+        });
+    }
+</script>
+</body>
+</html>

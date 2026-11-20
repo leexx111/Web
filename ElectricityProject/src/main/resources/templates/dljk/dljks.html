@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>智能电力监控系统</title>
+    <style>
+        .wh{
+            width: 100%;
+            /*height: 850px;*/
+            height: 100%;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #cbody{
+            overflow: hidden;
+        }
+        .layui-logo{
+            font-size: 30px;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/newLayui/css/layui.css">
+    <link rel="icon" type="image/x-icon" href="../../static/logo.png">
+    <script src="../../static/newLayui/layui.js"></script>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo" style="font-size: 25px;width: 400px">智能电力监控系统</div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <img src="../../static/img/cms01.jpg" class="layui-nav-img">
+                    admin
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="">基本资料</a></dd>
+                    <dd><a href="">安全设置</a></dd>
+                </dl>
+
+            </li>
+            <li class="layui-nav-item"><a href="">退出</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">首页</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('yth.html')">西区1#配电室</a></dd>
+<!--                        <dd><a href="#" onclick="loadPage('yth.html')">西区3#配电室</a></dd>-->
+<!--                        <dd><a href="#" onclick="loadPage('yth.html')">西区4#配电室</a></dd>-->
+                        <dd><a href="#" onclick="loadPage('yth_2.html')">东区2#配电室</a></dd>
+<!--                        <dd><a href="#" onclick="loadPage('yth.html')">东区5#配电室</a></dd>-->
+                        <dd><a href="#" onclick="loadPage('yth_6.html')">东区6#配电室</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">运行监视</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('zxjt.html')">主接线图监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('pdsb.html')">配电设备监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('bsjjc.html')">表计数据监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('pdsbda.html')">配电设备档案</a></dd>
+                        <dd><a href="#" onclick="loadPage('dnzljc.html')">电能质量监测</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">报警及事件管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('pdbjcx.html')">配电报警查询</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">统计分析</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('nhtj.html')">能耗统计分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('dltj.html')">电量统计分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('dlfxjl.html')">电量分项计量</a></dd>
+                        <dd><a href="#" onclick="loadPage('fhsb.html')">负荷时比分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('fhdb.html')">负荷对比分析</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">报表管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('rtj.html')">日统计报表</a></dd>
+                        <dd><a href="#" onclick="loadPage('ytj.html')">月统计报表</a></dd>
+                        <dd><a href="#" onclick="loadPage('ntj.html')">年统计报表</a></dd>
+<!--                        <dd><a href="#" onclick="showAlarmPopup()">报警</a></dd>-->
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!--  homepage2-->
+<!--    <iframe src="yth.html" id="content"></iframe>-->
+
+    <div class="layui-body" id="cbody">
+        <iframe src="yth.html" id="content" class="wh"></iframe>
+    </div>
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        © iVEES - 智能电力监控系统
+    </div>
+</div>
+<!-- 隐藏的音频元素 -->
+<audio id="alertSound" preload="auto" style="display: none;">
+    <source src="/static/yp/报警声-哔哔哔-紧急集合(Alarm Sound 2)_爱给网_aigei_com.mp3" type="audio/mpeg">
+</audio>
+<script>
+    $ =layui.jquery;
+    document.title = '一维IVEES能源管理系统';
+    document.addEventListener('DOMContentLoaded', function () {
+        var style = document.createElement('style');
+        style.textContent = '.layui-logo{display:flex;align-items:center;gap:14px;width:460px !important;font-size:28px !important;font-weight:700;letter-spacing:1px;color:#f5f7fa;padding-left:12px;}.layui-logo img{width:52px;height:52px;object-fit:contain; drop-shadow(0 2px 6px rgba(0,0,0,.25));}.layui-logo .brand-text{color:#f8fafc;text-shadow:0 2px 10px rgba(15,23,42,.35);white-space:nowrap;}';
+        document.head.appendChild(style);
+
+        var logo = document.querySelector('.layui-logo');
+        if (logo) {
+            logo.innerHTML = '<img src="../../static/logo.png" alt="LOGO"><span class="brand-text">\u4e00\u7ef4 IVEES \u80fd\u6e90\u7ba1\u7406\u7cfb\u7edf</span>';
+        }
+
+        var footer = document.querySelector('.layui-footer');
+        if (footer) {
+            footer.innerHTML = '<!-- footer -->&copy; \u4e00\u7ef4 IVEES - \u80fd\u6e90\u7ba1\u7406\u7cfb\u7edf';
+        }
+    });
+    //JavaScript代码区域
+    layui.use('element', function(){
+        var element = layui.element;
+    });
+    //页面转换
+    function loadPage(pageUrl){
+        document.getElementById("content").src = pageUrl;
+        // 播放并立即暂停，触发浏览器授权
+        alertSound.play().then(() => {
+            alertSound.pause();
+            isAuthorized = true; // 标记为已授权
+            console.log('已获得音频播放授权');
+            // 授权后立即开始定时请求
+        }).catch(error => {
+            console.error('授权失败，请重新点击:', error);
+        });
+    }
+    //空的的调用方法
+    function a(){
+
+    }
+    //联系我们，暂定清除缓存按钮
+    function lianxi(){
+        localStorage.removeItem('key');
+        localStorage.removeItem('changeColor');
+        console.log("123")
+        // window.location.href = "http://localhost:63342/Conditioner/templates/daohang3.html?_ijt=uire3uc8tmh2hgsnhe0a9v3lko";
+        location.reload();
+    }
+
+
+    function getRoomNameByDeviceName(deviceName) {
+        if (!deviceName) {
+            return '未知配电室';
+        }
+        if (deviceName.startsWith('2-')) {
+            return '2号配电室';
+        }
+        if (deviceName.startsWith('6-')) {
+            return '6号配电室';
+        }
+        return '1号配电室';
+    }
+
+    function showAlarmPopup(araemName, message, alarmId, eventType, pointKey) {
+        playAlertSound();
+
+        const safeName = araemName || (pointKey ? pointKey.split('.')[0] : '未知设备');
+        const roomName = getRoomNameByDeviceName(safeName);
+        const now = new Date();
+        const localTime = now.toLocaleString();
+        const isRecoverEvent = eventType === 'recover';
+        const popupTitle = isRecoverEvent ? '恢复提示' : '报警提示';
+        const popupText = safeName + ' ' + message;
+
+        layer.open({
+            type: 1,
+            title: '<i class="fa fa-bell text-danger"></i>' + roomName + ' ' + safeName + ' ' + popupTitle,
+            content: '<div class="p-15" style="padding: 10px">' +
+                '<div class="text-center mb-15">' +
+                '<i class="fa fa-exclamation-triangle text-danger" style="font-size: 60px;"></i>' +
+                '</div>' +
+                '<div class="text-center text-danger font-size-18 mb-10">' + popupText + '</div>' +
+                '<div class="text-center mb-15">报警时间: <span class="font-weight-bold">' + localTime + '</span></div>' +
+                '<div class="text-center text-muted">请立即检查设备状态</div>' +
+                '</div>',
+            area: ['400px', '300px'],
+            skin: 'layui-layer-danger',
+            btn: ['确认', '忽略'],
+            btn1: function(index, layero) {
+                if (alarmId && !isRecoverEvent) {
+                    ubdateAlarm(alarmId);
+                }
+                layer.close(index);
+                layer.msg(isRecoverEvent ? '恢复信息已确认' : '报警已确认', {icon: 1});
+                pauseAlertSound();
+            },
+            btn2: function(index, layero) {
+                layer.close(index);
+                layer.msg(isRecoverEvent ? '恢复信息已关闭' : '报警已忽略', {icon: 3});
+                pauseAlertSound();
+            },
+            success: function(layero, index) {
+                layero.find('.layui-layer-title').addClass('pulse-animation');
+            }
+        });
+    }
+
+
+    let pollingActive = true; // 轮询状态标志
+    let currentAlarmId = null; // 当前处理中的报警ID
+
+    function ubdateAlarm(id){
+        $.ajax({
+            url: "/hdb/updatealarmById",
+            data: {
+                alarmId : id
+            },
+            success: function (response) {
+                console.log("接口调用成功，返回数据：", response);
+
+            },
+            error: function (error) {
+                console.error("接口调用失败：", error);
+            }
+        });
+    }
+
+    // 播放提示音函数
+    function playAlertSound() {
+        alertSound.currentTime = 0;
+        console.log("开始播放")
+        alertSound.play().catch(error => {
+            console.error('播放提示音失败:', error);
+        });
+    }
+
+    // 暂停提示音函数
+    function pauseAlertSound() {
+        alertSound.pause();
+        console.log("暂停播放")
+        // 重置音频位置（可选，方便下次播放从开头开始）
+        alertSound.currentTime = 0;
+    }
+
+
+    // 连接 WebSocket 服务器
+    let socket;
+    let closingSocket = false;
+    let reconnectTimer;
+    function connectAlarmSocket() {
+    socket = new WebSocket((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
+
+    // 连接成功时触发
+    socket.onopen = function(event) {
+        console.log('WebSocket 连接已建立');
+        // socket.send('Hello, server!');
+    };
+
+    // 收到消息时触发
+    socket.onmessage = function(event) {
+        // console.log('收到消息: ' + event.data);
+        // 处理服务器返回的数据 如果消息为有报警，则弹窗
+        try {
+            // 解析JSON字符串为JavaScript对象
+            const messageObj = JSON.parse(event.data);
+
+            // 直接使用对象中的属性
+            console.log('收到消息:', messageObj);
+            console.log('消息内容:', messageObj.message);
+            console.log('消息名称:', messageObj.name);
+
+            showAlarmPopup(
+                messageObj.name,
+                messageObj.message,
+                messageObj.alarmId,
+                messageObj.eventType,
+                messageObj.pointKey
+            );
+
+
+
+        } catch (error) {
+            console.error('解析消息失败:', error);
+        }
+    };
+
+    // 连接关闭时触发
+    socket.onclose = function(event) {
+        if (!closingSocket) reconnectTimer = setTimeout(connectAlarmSocket, 3000);
+        console.log('WebSocket 连接已关闭');
+    };
+
+    // 发生错误时触发
+    socket.onerror = function(error) {
+        console.error('WebSocket 发生错误: ' + error);
+    };
+
+    }
+    connectAlarmSocket();
+    // 页面关闭时关闭连接
+    window.onbeforeunload = function() {
+        closingSocket = true;
+        clearTimeout(reconnectTimer);
+        if (socket) socket.close();
+    };
+</script>
+</body>
+</html>

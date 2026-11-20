@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>负荷对比分析</title>
+    <link rel="stylesheet" href="../../static/layui/css/layui.css">
+    <script src="../../static/layui/layui.js"></script>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="../../static/ExcelJS/exceljs.min.js"></script>
+    <script src="../../static/ExcelJS/FileSaver.min.js"></script>
+    <style>
+
+        #title_fhdb{
+            width: 100%;
+            height: 20px;
+            background-color: #dcdcdb;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            margin: 0px;
+            /*border: 1px solid #c7c7c5;*/
+
+        }
+        #body_fhdb{
+            width: 100%;
+            height: 670px;
+        }
+        #fhdb_unit1{
+            width: 100%;
+            height: 30px;
+            display: flex;
+        }
+        #fhdb_unit1  label,input,div{
+            margin-top: 5px;
+        }
+        #fhdb_unit2{
+            margin-top: 20px;
+            width: 100%;
+            height: 600px;
+        }
+        .clwzxlk{
+            width: 380px;
+            height: 500px;
+            position: absolute;
+            left: 120px;
+            top: 73px;
+            border: 1px solid black;
+            background-color: #fdfdfe;
+            display: none;
+            /*background-color: black;*/
+        }
+        .layui-tree-line {
+            height: 500px; /* 假设容器高度为300px */
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        .layui-select-title{
+            width: 400px;
+            height: 34px;
+            /*border: 2px solid rgba(24,24,24,0.98);*/
+            margin-left: 10px;
+        }
+    </style>
+    <script src="../../static/newLayui/echarts.min.js"></script>
+    <script src="treedata.js"></script>
+</head>
+<body>
+
+<div id="title_fhdb">&nbsp;&nbsp;&nbsp;负荷对比分析</div>
+<div id="body_fhdb">
+    <div id="fhdb_unit1">
+        <label  style="padding-top: 5px;margin-right: 10px;margin-left: 20px">测量位置:</label>
+        <input type="text" id="pds" onclick="clwzdj()" value="401:2低压进线一" class="layui-input" style="width: 200px;">
+
+        <label  style="padding-top: 5px;margin-right: 10px;margin-left: 20px">查询日期:</label>
+        <input type="date" id="cxrq"   class="layui-input" style="width: 200px;height:30px;border: 2px solid rgba(24,24,24,0.98);">
+        <label  style="padding-top: 5px;">-</label>
+        <input type="date" id="cxrqs"  class="layui-input" style="width: 200px;height:30px;border: 2px solid rgba(24,24,24,0.98);">
+
+        <div style="width: 20px"></div>
+
+        <label  style="padding-top: 5px;margin-right: 10px;margin-left: 20px">对比日期:</label>
+        <input type="date" id="dbrq"  value="2025-06-19" class="layui-input" style="width: 200px;height:30px;border: 2px solid rgba(24,24,24,0.98);">
+
+        <button class="layui-btn" style="margin-left: 20px" onclick="ksdb()" >开始对比</button>
+        <button class="layui-btn export-btn" onclick="exportFHDBToExcel()">导出Excel</button>
+    </div>
+    <div id="fhdb_unit2">
+
+    </div>
+    <div style="" class="clwzxlk" id="navTree">
+
+    </div>
+</div>
+    <script>
+        
+        $ =layui.jquery;    // 简化后的导航数据
+        var cmsclwz ="";
+        layui.use('tree', function(){
+            const tree = layui.tree;
+            const layer = layui.layer;
+            tree.render({
+                elem: '#navTree',
+                data: treedata,
+                showLine: true,
+                accordion: true, // 手风琴效果
+                className: 'custom-tree-class',
+                click: function (obj) {
+                    document.getElementById('pds').value=obj.data.title;
+                    cmsclwz =obj.data.extraInfo;
+                    document.getElementById("navTree").style.display ='none';
+                }
+            });
+        });
+        function clwzdj(){
+            document.getElementById("navTree").style.display ='block';
+        }
+        const clwzxlk = document.getElementById('clwzxlk');
+        
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+            if (target.id !== 'pds' && !target.classList.contains('layui-icon')) {
+                // 在此处添加点击物体class不为aaa时要执行的代码
+                document.getElementById("navTree").style.display ='none';
+            }
+        });
+        function ksdb(){
+            var myChart = echarts.init(document.getElementById('fhdb_unit2'));
+
+            const Data1 = document.getElementById('cxrq').value || '2025-06-17';
+            const Data2 = document.getElementById('cxrqs').value || '2025-06-30';
+            const Data3 = document.getElementById('pds').value || '1AA1-1';
+            const Data4 = document.getElementById('dbrq').value || '2025-06-19';
+
+            if (cmsclwz ==""){
+                cmsclwz ="1AA1-1";
+            }
+
+            $.ajax({
+            url: 'http://192.168.1.227:8081/hdb/getfhdbfx',
+            method: 'POST',
+            data:{
+                kssj : Data1,
+                sjsj : Data2,
+                clwz : cmsclwz,
+                dbrq : Data4
+            },
+            success: function (response) {
+                console.log('服务器返回数据:', response);
+                
+                // 处理数据 - 从返回结果中提取日期和数值
+                const sortedData = response.data1.sort((a, b) => {
+                    return new Date(a.data) - new Date(b.data);
+                });
+                
+                // 提取x轴的日期数据
+                const xAxisData = sortedData.map(item => {
+                    return item.data.split('T')[0]; // 只保留日期
+                });
+                
+                // 提取y轴的数值数据
+                const seriesData = sortedData.map(item => item.W);
+                
+                // 配置图表选项
+                var option = {
+                    
+                tooltip: {
+                    trigger: 'axis'
+                },
+                    grid: {
+                        left: "2%",
+                        right: "2%",
+                        bottom: "5%",
+                        top: "10%",
+                        containLabel: true
+                    },
+                    title: {
+                        text: Data3+'---最大负荷对比分析',
+                        // left: 'center'
+                    },
+                    legend: {
+                        data: ['负荷数据', '对比数据'], // 添加对比线的图例
+                        top: 20
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: xAxisData,
+                        // 如果数据点太多，可以设置坐标轴标签旋转
+                        axisLabel: {
+                            rotate: 45, // 旋转标签（推荐30-60度，既节省横向空间又易阅读）
+                            interval: Math.ceil(xAxisData.length / 10), // 智能间隔：最多显示10个标签，自动计算间隔
+                            // 可选：调整文字大小，进一步节省空间
+                            fontSize: 12,
+                            // 可选：文字超出时省略（避免超长日期换行）
+                            ellipsis: true
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '单位: kW'
+                    },
+                    series: [
+                        {
+                            name: "负荷数据",
+                            data: seriesData,
+                            type: 'line',
+                            symbol: 'circle',
+                            symbolSize: 8,
+                            itemStyle: {
+                                color: 'red'
+                            }
+                        },
+                        // 添加对比横线数据系列
+                        {
+                            name: "对比数据",
+                            type: 'line',
+                            data: xAxisData.map(() => parseFloat(response.data2)),
+                            lineStyle: {
+                                type: 'dashed',
+                                color: 'blue'
+                            },
+                            symbol: 'none',
+                            z: 10
+                        }
+                    ]
+                };
+
+                // 使用配置项显示图表
+                myChart.setOption(option);
+            },
+            error: function(err) {
+                console.error('获取数据失败:', err);
+            }
+        });
+        }
+        // 页面加载完成后自动执行一次函数
+        window.onload = function() {
+            ksdb();
+        };
+    
+        
+        // 监听窗口大小变化，自动调整图表尺寸
+        // window.addEventListener('resize', function() {
+        //     myChart.resize();
+        // });
+
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+            var today = new Date();
+            var thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            function formatDate(date) {
+                var year = date.getFullYear();
+                var month = (date.getMonth() + 1).toString().padStart(2, '0');
+                var day = date.getDate().toString().padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            }
+
+            var currentDate = formatDate(today);
+            var currentDates = formatDate(thirtyDaysAgo);
+
+            //执行一个laydate实例
+            laydate.render({
+                elem: '#cxrq' //指定元素
+                , value: currentDates
+            });
+            laydate.render({
+                elem: '#cxrqs' //指定元素
+                , value: currentDate
+            });
+            laydate.render({
+                elem: '#dbrq' //指定元素
+                , value: currentDate
+            });
+        });
+
+        // 负荷对比分析Excel导出函数
+        async function exportFHDBToExcel() {
+            try {
+                // 1. 获取页面当前信息
+                const clwz = document.getElementById('pds').value || '未知位置';
+                const cxrq = document.getElementById('cxrq').value || '查询起始日期';
+                const cxrqs = document.getElementById('cxrqs').value || '查询结束日期';
+                const dbrq = document.getElementById('dbrq').value || '对比日期';
+
+                // 2. 获取ECharts图表实例和图片
+                const myChart = echarts.getInstanceByDom(document.getElementById('fhdb_unit2'));
+                if (!myChart) {
+                    layer.msg('未找到图表，请先进行查询');
+                    return;
+                }
+                const chartImageURL = myChart.getDataURL({
+                    type: 'png',
+                    pixelRatio: 2,
+                    backgroundColor: '#fff'
+                });
+
+                // 3. 获取图表对应的原始数据
+                const option = myChart.getOption();
+                const seriesData1 = option.series[0]?.data || []; // 负荷数据
+                const seriesData2 = option.series[1]?.data || []; // 对比数据
+                const xAxisData = option.xAxis[0]?.data || []; // X轴日期数据
+
+                // 4. 创建Excel工作簿和工作表
+                const workbook = new ExcelJS.Workbook();
+                const mainSheet = workbook.addWorksheet('负荷对比分析');
+                const detailSheet = workbook.addWorksheet('详细数据');
+
+                // 定义对齐样式
+                const centerAlign = { horizontal: 'center', vertical: 'middle' };
+                const leftAlign = { horizontal: 'left', vertical: 'middle' };
+                const rightAlign = { horizontal: 'right', vertical: 'middle' };
+
+                // 5. 构建主工作表（负荷对比分析）
+                // 5.1 设置列宽（A到O列，共15列）
+                for (let i = 0; i < 15; i++) {
+                    mainSheet.getColumn(i + 1).width = 10;
+                }
+
+                // 5.2 添加标题
+                mainSheet.mergeCells('A1:O1');
+                const titleCell = mainSheet.getCell('A1');
+                titleCell.value = `${clwz} - 负荷对比分析报表`;
+                titleCell.font = { bold: true, size: 16, name: '宋体' };
+                titleCell.alignment = centerAlign;
+
+                // 第二行：左侧信息
+                mainSheet.mergeCells('A2:G2');
+                mainSheet.getCell('A2').value = `查询时段: ${cxrq} 至 ${cxrqs}  对比日期: ${dbrq}`;
+                mainSheet.getCell('A2').font = { name: '宋体', size: 11 };
+                mainSheet.getCell('A2').alignment = leftAlign;
+
+                // 第二行：右侧信息（生成时间）
+                const now = new Date();
+                const formattedDate = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                mainSheet.mergeCells('I2:O2');
+                mainSheet.getCell('I2').value = `生成时间: ${formattedDate}`;
+                mainSheet.getCell('I2').font = { name: '宋体', size: 11 };
+                mainSheet.getCell('I2').alignment = rightAlign;
+
+                // 5.3 添加图表图片
+                const imageId = workbook.addImage({
+                    base64: chartImageURL,
+                    extension: 'png'
+                });
+                mainSheet.mergeCells('A4:O20');
+                mainSheet.addImage(imageId, {
+                    tl: { col: 0.1, row: 3.1 },
+                    br: { col: 14.9, row: 19.9 },
+                    editAs: 'absolute'
+                });
+
+                // 5.4 添加数据汇总表格（让表格宽度与图表一致）
+                const tableStartRow = 22;
+                const tableHeaders = ['日期', '负荷数据(kW)', '对比数据(kW)', '差值(kW)'];
+
+                // 让4列表格占满15列
+                const totalColumns = 15;
+
+                // 计算每列占用的列数
+                const columnSpans = [4, 4, 4, 3]; // 前3列各占4列，最后一列占3列
+
+                // 存储所有合并的单元格范围，避免重复设置边框
+                const mergedRanges = [];
+
+                // 添加表头（合并单元格）
+                tableHeaders.forEach((header, index) => {
+                    const startColIndex = index === 0 ? 0 : columnSpans.slice(0, index).reduce((a, b) => a + b, 0);
+                    const endColIndex = startColIndex + columnSpans[index] - 1;
+                    const startCell = String.fromCharCode(65 + startColIndex) + tableStartRow;
+                    const endCell = String.fromCharCode(65 + endColIndex) + tableStartRow;
+                    mainSheet.mergeCells(`${startCell}:${endCell}`);
+
+                    // 记录合并范围
+                    mergedRanges.push({
+                        startRow: tableStartRow,
+                        endRow: tableStartRow,
+                        startCol: startColIndex,
+                        endCol: endColIndex
+                    });
+
+                    const cell = mainSheet.getCell(startCell);
+                    cell.value = header;
+                    cell.font = { bold: true, name: '宋体', size: 11 };
+                    cell.alignment = centerAlign;
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE0E0E0' }
+                    };
+                });
+
+                // 添加数据行
+                if (xAxisData && xAxisData.length > 0) {
+                    xAxisData.forEach((date, rowIndex) => {
+                        const dataRow = tableStartRow + 1 + rowIndex;
+                        const loadValue = seriesData1[rowIndex] || 0;
+                        const compareValue = seriesData2[rowIndex] || 0;
+                        const diffValue = loadValue - compareValue;
+
+                        // 添加日期
+                        const startColIndex = 0;
+                        const endColIndex = columnSpans[0] - 1;
+                        const dateCell = String.fromCharCode(65 + startColIndex) + dataRow;
+                        const dateEndCell = String.fromCharCode(65 + endColIndex) + dataRow;
+                        mainSheet.mergeCells(`${dateCell}:${dateEndCell}`);
+                        mergedRanges.push({
+                            startRow: dataRow,
+                            endRow: dataRow,
+                            startCol: startColIndex,
+                            endCol: endColIndex
+                        });
+                        mainSheet.getCell(dateCell).value = date;
+                        mainSheet.getCell(dateCell).alignment = centerAlign;
+
+                        // 添加负荷数据
+                        const loadStartCol = columnSpans[0];
+                        const loadEndCol = loadStartCol + columnSpans[1] - 1;
+                        const loadCell = String.fromCharCode(65 + loadStartCol) + dataRow;
+                        const loadEndCell = String.fromCharCode(65 + loadEndCol) + dataRow;
+                        mainSheet.mergeCells(`${loadCell}:${loadEndCell}`);
+                        mergedRanges.push({
+                            startRow: dataRow,
+                            endRow: dataRow,
+                            startCol: loadStartCol,
+                            endCol: loadEndCol
+                        });
+                        mainSheet.getCell(loadCell).value = typeof loadValue === 'number' ? loadValue.toFixed(2) : loadValue;
+                        mainSheet.getCell(loadCell).alignment = rightAlign;
+
+                        // 添加对比数据
+                        const compareStartCol = loadStartCol + columnSpans[1];
+                        const compareEndCol = compareStartCol + columnSpans[2] - 1;
+                        const compareCell = String.fromCharCode(65 + compareStartCol) + dataRow;
+                        const compareEndCell = String.fromCharCode(65 + compareEndCol) + dataRow;
+                        mainSheet.mergeCells(`${compareCell}:${compareEndCell}`);
+                        mergedRanges.push({
+                            startRow: dataRow,
+                            endRow: dataRow,
+                            startCol: compareStartCol,
+                            endCol: compareEndCol
+                        });
+                        mainSheet.getCell(compareCell).value = typeof compareValue === 'number' ? compareValue.toFixed(2) : compareValue;
+                        mainSheet.getCell(compareCell).alignment = rightAlign;
+
+                        // 添加差值数据
+                        const diffStartCol = compareStartCol + columnSpans[2];
+                        const diffEndCol = diffStartCol + columnSpans[3] - 1;
+                        const diffCell = String.fromCharCode(65 + diffStartCol) + dataRow;
+                        const diffEndCell = String.fromCharCode(65 + diffEndCol) + dataRow;
+                        mainSheet.mergeCells(`${diffCell}:${diffEndCell}`);
+                        mergedRanges.push({
+                            startRow: dataRow,
+                            endRow: dataRow,
+                            startCol: diffStartCol,
+                            endCol: diffEndCol
+                        });
+                        mainSheet.getCell(diffCell).value = diffValue.toFixed(2);
+                        mainSheet.getCell(diffCell).alignment = rightAlign;
+
+                        // 设置差值颜色
+                        if (diffValue > 0) {
+                            mainSheet.getCell(diffCell).font = { color: { argb: 'FFFF0000' } };
+                        } else if (diffValue < 0) {
+                            mainSheet.getCell(diffCell).font = { color: { argb: 'FF008000' } };
+                        }
+
+                        // 设置字体
+                        for (let c = 0; c < totalColumns; c++) {
+                            const cell = mainSheet.getCell(dataRow, c + 1);
+                            cell.font = { name: '宋体', size: 11 };
+                        }
+                    });
+
+                    // 添加边框 - 只对合并区域的外围边框进行设置
+                    const tableEndRow = tableStartRow + xAxisData.length;
+                    for (let r = tableStartRow; r <= tableEndRow; r++) {
+                        for (let c = 0; c < totalColumns; c++) {
+                            const cell = mainSheet.getCell(r, c + 1);
+                            // 检查当前单元格是否是合并区域的起始单元格
+                            let isMergedStart = false;
+                            for (const range of mergedRanges) {
+                                if (range.startRow === r && range.startCol === c) {
+                                    isMergedStart = true;
+                                    break;
+                                }
+                            }
+
+                            // 只为合并区域的起始单元格设置边框
+                            if (isMergedStart) {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            }
+                        }
+                    }
+
+                    // 添加统计行 - 重新计算列位置，避免重复合并
+                    const statsRow = tableEndRow + 1;
+                    const avgLoad = (seriesData1.reduce((sum, val) => sum + (val || 0), 0) / seriesData1.length).toFixed(2);
+                    const avgCompare = (seriesData2.reduce((sum, val) => sum + (val || 0), 0) / seriesData2.length).toFixed(2);
+                    const maxLoad = Math.max(...seriesData1);
+                    const minLoad = Math.min(...seriesData1);
+
+                    // 添加平均值行（占满整行）
+                    mainSheet.mergeCells(`A${statsRow}:O${statsRow}`);
+                    const avgCell = mainSheet.getCell(`A${statsRow}`);
+                    avgCell.value = `平均值: 负荷数据 ${avgLoad} kW  |  对比数据 ${avgCompare} kW`;
+                    avgCell.font = { bold: true, name: '宋体', size: 11 };
+                    avgCell.alignment = centerAlign;
+                    avgCell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF0F0F0' }
+                    };
+
+                    // 添加最大值行
+                    const maxRow = statsRow + 1;
+                    mainSheet.mergeCells(`A${maxRow}:O${maxRow}`);
+                    const maxCell = mainSheet.getCell(`A${maxRow}`);
+                    maxCell.value = `最大值: ${maxLoad} kW`;
+                    maxCell.font = { name: '宋体', size: 11 };
+                    maxCell.alignment = centerAlign;
+                    maxCell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF0F0F0' }
+                    };
+
+                    // 添加最小值行
+                    const minRow = statsRow + 2;
+                    mainSheet.mergeCells(`A${minRow}:O${minRow}`);
+                    const minCell = mainSheet.getCell(`A${minRow}`);
+                    minCell.value = `最小值: ${minLoad} kW`;
+                    minCell.font = { name: '宋体', size: 11 };
+                    minCell.alignment = centerAlign;
+                    minCell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF0F0F0' }
+                    };
+
+                    // 为统计行添加边框
+                    for (let r = statsRow; r <= minRow; r++) {
+                        const cell = mainSheet.getCell(r, 1);
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                    }
+                }
+
+                // 5.5 添加说明
+                const infoRow = tableStartRow + (xAxisData ? xAxisData.length + 5 : 3);
+                mainSheet.mergeCells(`A${infoRow}:O${infoRow}`);
+                const infoCell = mainSheet.getCell(`A${infoRow}`);
+                infoCell.value = '注：以上数据为系统自动生成，差值正数表示负荷数据大于对比数据，负数表示小于对比数据。';
+                infoCell.font = { name: '宋体', size: 10, color: { argb: 'FF808080' } };
+                infoCell.alignment = centerAlign;
+
+                // 6. 构建详细数据工作表（保持不变）
+                detailSheet.columns = [
+                    { width: 20 },
+                    { width: 20 },
+                    { width: 20 },
+                    { width: 20 },
+                ];
+
+                detailSheet.mergeCells('A1:D1');
+                const detailTitleCell = detailSheet.getCell('A1');
+                detailTitleCell.value = `${clwz} - 详细负荷数据对比`;
+                detailTitleCell.font = { bold: true, size: 14, name: '宋体' };
+                detailTitleCell.alignment = centerAlign;
+
+                detailSheet.getCell('A2').value = '日期';
+                detailSheet.getCell('B2').value = `负荷数据(kW)`;
+                detailSheet.getCell('C2').value = `${dbrq} 对比数据(kW)`;
+                detailSheet.getCell('D2').value = '差值 (kW)';
+
+                for (let col = 1; col <= 4; col++) {
+                    const cell = detailSheet.getCell(2, col);
+                    cell.font = { bold: true, name: '宋体', size: 11 };
+                    cell.alignment = centerAlign;
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE0E0E0' }
+                    };
+                }
+
+                for (let i = 0; i < xAxisData.length; i++) {
+                    const rowIndex = 3 + i;
+                    const loadValue = seriesData1[i] || 0;
+                    const compareValue = seriesData2[i] || 0;
+                    const diffValue = loadValue - compareValue;
+
+                    detailSheet.getCell(`A${rowIndex}`).value = xAxisData[i];
+                    detailSheet.getCell(`B${rowIndex}`).value = typeof loadValue === 'number' ? loadValue.toFixed(2) : loadValue;
+                    detailSheet.getCell(`C${rowIndex}`).value = typeof compareValue === 'number' ? compareValue.toFixed(2) : compareValue;
+                    detailSheet.getCell(`D${rowIndex}`).value = diffValue.toFixed(2);
+
+                    for (let col = 1; col <= 4; col++) {
+                        const cell = detailSheet.getCell(rowIndex, col);
+                        cell.font = { name: '宋体', size: 11 };
+                        cell.alignment = (col === 1) ? centerAlign : rightAlign;
+
+                        if (col === 4 && diffValue !== 0) {
+                            if (diffValue > 0) {
+                                cell.font.color = { argb: 'FFFF0000' };
+                            } else {
+                                cell.font.color = { argb: 'FF008000' };
+                            }
+                        }
+                    }
+                }
+
+                for (let r = 2; r <= (xAxisData.length + 2); r++) {
+                    for (let c = 1; c <= 4; c++) {
+                        const cell = detailSheet.getCell(r, c);
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                    }
+                }
+
+                if (xAxisData.length > 0) {
+                    const statsRow = xAxisData.length + 3;
+                    detailSheet.mergeCells(`A${statsRow}:A${statsRow}`);
+                    detailSheet.getCell(`A${statsRow}`).value = '统计';
+                    detailSheet.getCell(`A${statsRow}`).font = { bold: true, name: '宋体', size: 11 };
+                    detailSheet.getCell(`A${statsRow}`).alignment = centerAlign;
+
+                    const avgLoad = (seriesData1.reduce((sum, val) => sum + (val || 0), 0) / seriesData1.length).toFixed(2);
+                    const avgCompare = (seriesData2.reduce((sum, val) => sum + (val || 0), 0) / seriesData2.length).toFixed(2);
+
+                    detailSheet.getCell(`B${statsRow}`).value = `平均值: ${avgLoad}`;
+                    detailSheet.getCell(`C${statsRow}`).value = `平均值: ${avgCompare}`;
+
+                    for (let c = 2; c <= 3; c++) {
+                        const cell = detailSheet.getCell(statsRow, c);
+                        cell.font = { name: '宋体', size: 11 };
+                        cell.alignment = rightAlign;
+                    }
+                }
+
+                // 7. 生成并下载文件
+                const buffer = await workbook.xlsx.writeBuffer();
+                const fileName = `负荷对比分析_${clwz}_${cxrq}_${cxrqs}_${new Date().getTime()}.xlsx`;
+
+                saveAs(new Blob([buffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                }), fileName);
+
+                layer.msg(`Excel报表已生成: ${fileName}`);
+
+            } catch (error) {
+                console.error('导出Excel时发生错误:', error);
+                layer.msg('导出失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

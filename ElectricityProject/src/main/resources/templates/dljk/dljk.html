@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>智能电力监控系统</title>
+
+
+    <style>
+
+        #content{
+            position: absolute;
+            left: 120px;
+            top: 23px;
+            border: 0px;
+            /*overflow: hidden;*/
+            /*transform: scale(0.9);*/
+            overflow: hidden;
+            transform: scale(0.9);
+            width: 100%;
+            height: 100%;
+        }
+        #cbody{
+
+            overflow: hidden;
+            /*position: relative;*/
+            /*background-color: blue;*/
+            /*height: 635px;*/
+        }
+        .layui-logo{
+            font-size: 30px;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/newLayui/css/layui.css">
+    <script src="../../static/newLayui/layui.js"></script>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo" style="font-size: 25px;width: 400px">智能电力监控系统</div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <img src="../../static/img/cms01.jpg" class="layui-nav-img">
+                    admin
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="">基本资料</a></dd>
+                    <dd><a href="">安全设置</a></dd>
+                </dl>
+
+            </li>
+            <li class="layui-nav-item"><a href="">退出</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+
+                <li class="layui-nav-item">
+                    <a href="javascript:;">首页</a>
+                    <dl class="layui-nav-child">
+                       <dd><a href="#" onclick="loadPage('yth.html')">亚投行1#配电室</a></dd>
+                        <dd><a href="#" onclick="loadPage('yth.html')">东区2#配电室</a></dd>
+                        <dd><a href="#" onclick="loadPage('yth.html')">东区6#配电室</a></dd>
+                        <dd><a href="#" onclick="loadPage('yth.html')">新增竖井汇总</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">运行监视</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('zxjt.html')">主接线图监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('pdsb.html')">配电设备监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('yth.html')">表计数据监测</a></dd>
+                        <dd><a href="#" onclick="loadPage('yth.html')">配电设备档案</a></dd>
+                        <dd><a href="#" onclick="loadPage('dnzljc.html')">电能质量监测</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">报警及事件管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('pdbjcx.html')">配电报警查询</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">统计分析</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('yth.html')">能耗统计分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('dltj.html')">电量统计分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('dlfxjl.html')">电量分项计量</a></dd>
+                        <dd><a href="#" onclick="loadPage('fhsb.html')">负荷时比分析</a></dd>
+                        <dd><a href="#" onclick="loadPage('fhdb.html')">负荷对比分析</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">报表管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="#" onclick="loadPage('rtj.html')">日统计报表</a></dd>
+                        <dd><a href="#" onclick="loadPage('ytj.html')">月统计报表</a></dd>
+                        <dd><a href="#" onclick="loadPage('ntj.html')">年统计报表</a></dd>
+                    </dl>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+    <!--  homepage2-->
+    <iframe src="yth.html" id="content"></iframe>
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        © iVEES - 智能电力监控系统
+    </div>
+</div>
+<script>
+    document.title = '\u4e00\u7ef4\u80fd\u6e90\u7ba1\u7406\u7cfb\u7edf';
+    document.addEventListener('DOMContentLoaded', function () {
+        var style = document.createElement('style');
+        style.textContent = '.layui-logo{display:flex;align-items:center;gap:16px;width:auto !important;height:60px;box-sizing:border-box;padding:0 8px 0 2px;background:transparent;border:none;box-shadow:none;font-size:22px !important;font-weight:600;letter-spacing:.5px;color:#f8fafc;margin-top:0;}.layui-logo img{width:60px;height:60px;object-fit:contain;background:#ffffff;border-radius:14px;padding:8px;box-shadow:0 8px 20px rgba(0,0,0,.22);}.layui-logo .brand-text{color:#f8fafc;text-shadow:0 1px 4px rgba(0,0,0,.25);white-space:nowrap;line-height:1;}';
+        document.head.appendChild(style);
+
+        var logo = document.querySelector('.layui-logo');
+        if (logo) {
+            logo.innerHTML = '<img src="../../static/logo.png" alt="LOGO"><span class="brand-text">\u4e00\u7ef4\u80fd\u6e90\u7ba1\u7406\u7cfb\u7edf</span>';
+        }
+
+        var footer = document.querySelector('.layui-footer');
+        if (footer) {
+            footer.innerHTML = '<!-- footer -->&copy; \u4e00\u7ef4 IVEES - \u80fd\u6e90\u7ba1\u7406\u7cfb\u7edf';
+        }
+    });
+    //JavaScript代码区域
+    layui.use('element', function(){
+        var element = layui.element;
+    });
+    //页面转换
+    function loadPage(pageUrl){
+        document.getElementById("content").src = pageUrl;
+    }
+    //空的的调用方法
+    function a(){
+
+    }
+    //联系我们，暂定清除缓存按钮
+    function lianxi(){
+        localStorage.removeItem('key');
+        localStorage.removeItem('changeColor');
+        console.log("123")
+        // window.location.href = "http://localhost:63342/Conditioner/templates/daohang3.html?_ijt=uire3uc8tmh2hgsnhe0a9v3lko";
+        location.reload();
+    }
+</script>
+</body>
+</html>
